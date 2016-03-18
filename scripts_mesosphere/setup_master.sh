@@ -10,3 +10,4 @@ sudo yum -y install mesosphere-zookeeper
 # Disable slave service
 sudo service mesos-slave stop
 sudo systemctl disable mesos-slave.service
+exit 0
