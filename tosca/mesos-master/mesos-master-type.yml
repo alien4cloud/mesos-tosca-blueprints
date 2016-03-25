@@ -1,0 +1,101 @@
+tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
+description: TOSCA simple profile with Mesos
+template_name: mesos-master-type
+template_version: 0.1.0-SNAPSHOT
+template_author: FastConnect
+
+imports:
+  - "tosca-normative-types:1.0.0-SNAPSHOT"
+
+node_types:
+  alien.nodes.MesosBase:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      A Mesos base node. This component defines common properties and install scripts for a Mesos base,
+      which is used to host Mesos Agents, eg. a Mesos master or a Mesos slave. It currently supports
+      REHL, Centos, Ubuntu and Debian distributions.
+    tags:
+      icon: images/mesos.png
+    properties:
+      firewall_rules:
+        type: string
+        required: false
+      hooks:
+        type: string
+        required: false
+        description: >
+          A comma-separated list of hook modules to be installed inside master/slave.
+      modules:
+        type: string
+        required: false
+        description: >
+          List of modules in a JSON-format to be loaded and be available to the internal subsystems.
+    interfaces:
+      Standard:
+        create:
+          inputs:
+            DISTR: { get_property: [HOST, os, distribution] }
+          implementation: scripts/install_mesos.sh
+    capabilities:
+      host: alien.capabilities.MesosContainer
+    requirements:
+      - host: tosca.nodes.Compute
+        relationship_type: tosca.relationships.HostedOn
+        lower_bound: 1
+        upper_bound: 1
+        node_filter:
+          capabilities:
+            - tosca.capabilities.OperatingSystem:
+              properties:
+                - type: { equal: linux }
+                - architecture: { equal : x86_64 }
+                - distribution: { valid_values : [ debian, rhel, ubuntu, centos ] }
+
+  alien.nodes.MesosAgent:
+    abstract: true
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      An abstract Mesos agent.
+  alien.nodes.MesosMaster:
+    derived_from: alien.nodes.MesosAgent
+    description: >
+      A Mesos master agent.
+    properties:
+      work_dir:
+        type: string
+        default: /var/lib/mesos
+      quorum:
+        type: integer
+        default: 1 # Est-il possible de le calculer ?
+      zk:
+        type: string
+        description: >
+          ZooKeeper URL (used for leader election amongst masters) May be one of:
+           - zk://host1:port1,host2:port2,.../path
+           - zk://username:password@host1:port1,host2:port2,.../path
+           - file:///path/to/file (where file contains one of the above)
+          NOTE: Not required if master is run in standalone mode (non-HA).
+        required: false
+      cluster_name:
+        type: string
+        default: "Mesos cluster"
+        required: false
+  alien.nodes.MesosSlave:
+    derived_from: alien.nodes.MesosAgent
+    description: >
+      A Mesos slave agent.
+    properties:
+      attributes:
+        type: string
+        description: >
+          Attributes of the slave machine, in the form: rack:2 or rack:2;u:1
+        required: false
+      isolation:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ "posix/cpu,posix/mem", "cgroups/cpu,cgroups/mem" ] # Todo extend to more values
+
+capability_types:
+  alien.capabilities.MesosContainer:
+    derived_from: tosca.capabilities.Container
