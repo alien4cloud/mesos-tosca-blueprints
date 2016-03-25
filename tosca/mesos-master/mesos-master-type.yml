@@ -40,7 +40,7 @@ node_types:
       host: alien.capabilities.MesosContainer
     requirements:
       - host: tosca.nodes.Compute
-        relationship_type: tosca.relationships.HostedOn
+        relationship: tosca.relationships.HostedOn
         lower_bound: 1
         upper_bound: 1
         node_filter:
@@ -56,6 +56,9 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       An abstract Mesos agent.
+    requirements:
+      - host: alien.capabilities.MesosContainer
+        relationship: tosca.capabilities.HostedOn # TODO: Do we need to create a MesosHostedOn relationship ?
   alien.nodes.MesosMaster:
     derived_from: alien.nodes.MesosAgent
     description: >
@@ -80,6 +83,16 @@ node_types:
         type: string
         default: "Mesos cluster"
         required: false
+    interfaces:
+      Standard:
+        configure:
+          # TODO inputs
+          implementation: scripts/configure_mesos_master.sh
+        start:
+          inputs:
+            IP: { get_property: [HOST, ip_address] } # est-ce qu'on peut les avoir en property du MesosAgent parent ?
+            ADVERTISE_IP: { get_property: [HOST, public_ip_address ] }
+          implementation: scripts/start_mesos_master.sh
   alien.nodes.MesosSlave:
     derived_from: alien.nodes.MesosAgent
     description: >
