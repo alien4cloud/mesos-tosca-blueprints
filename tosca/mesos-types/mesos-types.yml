@@ -15,7 +15,7 @@ node_types:
       which is used to host Mesos Agents, eg. a Mesos master or a Mesos slave. It currently supports
       REHL, Centos, Ubuntu and Debian distributions.
     tags:
-      icon: images/mesos.png
+      icon: images/icon.svg
     properties:
       version:
         type: string
@@ -61,6 +61,10 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       An abstract Mesos agent.
+    properties:
+      port:
+        type: integer
+        default: 5050
     requirements:
       - host: alien.capabilities.MesosContainer
         relationship: tosca.relationships.HostedOn
@@ -90,16 +94,20 @@ node_types:
         type: string
         default: "Mesos cluster"
         required: false
+    attributes:
+      master_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
     interfaces:
       Standard:
        # Todo : do we need a configure operation ?
         start:
           inputs:
-            IP: { get_property: [HOST, ip_address] } # est-ce qu'on peut les avoir en property du MesosAgent ?
-            ADVERTISE_IP: { get_property: [HOST, public_ip_address] }
-            WORK_DIR: { get_property: [SELF, work_dir] }
+            MESOS_IP: { get_attribute: [HOST, ip_address] }
+            MESOS_PORT: { get_property: [SELF, port] }
+            MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
+            MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
+            MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             # Todo : can inputs be optional ?
-          implementation: scripts/start_mesos_master.sh
+          implementation: scripts/start_master_SA.sh
   alien.nodes.MesosSlave:
     derived_from: alien.nodes.MesosAgent
     description: >

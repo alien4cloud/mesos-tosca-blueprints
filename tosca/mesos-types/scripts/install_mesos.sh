@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/bin/sh
 
 echo "Installing Mesos Base into directory $(pwd) on distrib ${LINUX_DISTR}"
 echo "Adding Mesosphere package repository.."
@@ -28,7 +28,7 @@ case ${LINUX_DISTR} in
         # Setup package repo
         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E56151BF
         echo "deb http://repos.mesosphere.com/${LINUX_DISTR} ${LINUX_CODENAME} main" | sudo tee /etc/apt/sources.list.d/mesosphere.list
-        sudo apt-get -y update || (sleep 15; sudo apt-get update || exit ${1})
+        sudo apt-get -y update || (sleep 15; sudo apt-get update || exit $1)
 
         # Install Mesos - ZK is pulled as a dependency
         if [ $MESOS_VERSION ]; then
