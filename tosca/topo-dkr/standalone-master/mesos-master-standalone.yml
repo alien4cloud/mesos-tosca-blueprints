@@ -16,6 +16,11 @@ topology_template:
       type: com.toscaruntime.docker.nodes.Container
       properties:
         image_id: toscaruntime/ubuntu-trusty
+        exposed_ports:
+          - port: 5050
+        port_mappings:
+          - from: 5050
+            to: 5050
       capabilities:
         os:
           properties:
