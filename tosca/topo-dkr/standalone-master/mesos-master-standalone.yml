@@ -38,6 +38,7 @@ topology_template:
       type: alien.nodes.MesosMaster
       properties:
         cluster_name: "Simple TOSCA Mesos SA topology"
+        log_dir: "/var/log/mesos/"
       requirements:
         - host: base
 

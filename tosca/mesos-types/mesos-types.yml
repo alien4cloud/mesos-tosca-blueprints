@@ -65,6 +65,9 @@ node_types:
       port:
         type: integer
         default: 5050
+      log_dir:
+        type: string
+        required: false
     requirements:
       - host: alien.capabilities.MesosContainer
         relationship: tosca.relationships.HostedOn
@@ -101,12 +104,14 @@ node_types:
        # Todo : do we need a configure operation ?
         start:
           inputs:
+            MESOS_CLUSTER: { get_property: [SELF, cluster_name] }
             MESOS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
+            MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
-            # Todo : can inputs be optional ?
+            MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
           implementation: scripts/start_master_SA.sh
   alien.nodes.MesosSlave:
     derived_from: alien.nodes.MesosAgent
