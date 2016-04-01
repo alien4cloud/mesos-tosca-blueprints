@@ -71,7 +71,7 @@ node_types:
     requirements:
       - host: alien.capabilities.MesosContainer
         relationship: tosca.relationships.HostedOn
-        # TODO: Do we need to create a MesosHostedOn relationship ? Ans : only if we need custom scripts for the relationship
+
   alien.nodes.MesosMaster:
     derived_from: alien.nodes.MesosAgent
     description: >
@@ -98,7 +98,9 @@ node_types:
         default: "Mesos cluster"
         required: false
     attributes:
-      master_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
+      external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
+      master_url: { concat: [get_attribute: [HOST, ip_adress], ":", get_property: [SELF, port]] }
+      # Todo : master_url: { get_operation_output: [CONFIGURE...] } - to retrieve zookeeper url
     interfaces:
       Standard:
        # Todo : do we need a configure operation ?
@@ -113,6 +115,7 @@ node_types:
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
           implementation: scripts/start_master_SA.sh
+
   alien.nodes.MesosSlave:
     derived_from: alien.nodes.MesosAgent
     description: >
@@ -129,6 +132,46 @@ node_types:
         constraints:
           - valid_values: [ "posix/cpu,posix/mem", "cgroups/cpu,cgroups/mem" ]
           # Todo extend to more values
+    requirements:
+      - master: alien.capabilities.MesosMaster
+        relationship: alien.relationships.MesosSlaveDependsOnMaster
+        lower_bound: 1
+    # Note - Tout est deporté dans la relationship atm
+#    interfaces:
+#      Standard:
+#        start:
+#          inputs:
+#            MESOS_MASTER: { [master, ] }
+#            MESOS_IP: { get_attribute: [HOST, ip_address] }
+#            MESOS_PORT: { get_property: [SELF, port] }
+#            MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
+#            MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
+#            MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
+#          implementation: scripts/start_slave.sh
+
 capability_types:
   alien.capabilities.MesosContainer:
     derived_from: tosca.capabilities.Container
+  alien.capabilities.MesosMaster:
+    derived_from: tosca.capabilities.Node
+# TODO : est-ce que c'est ok de récuperer les ip de cette façon ?
+relationship_types:
+  alien.relationships.MesosSlaveDependsOnMaster:
+    derived_from: tosca.relationships.DependsOn
+    description: Relationship used to bind a slave to a master
+    valid_source_types: [ alien.nodes.MesosSlaves ]
+    valid_target_types: [ alien.capabilities.MesosMaster ]
+    interfaces:
+      Configure:
+        add_target:
+          inputs:
+            MESOS_MASTER: { get_attribute: [TARGET, master_url] }
+            MESOS_IP: { get_attribute: [SOURCE, ip_address] }
+            MESOS_PORT: { get_property: [SOURCE, port] }
+            MESOS_HOSTNAME: { get_attribute: [SOURCE, public_ip_address] }
+            MESOS_ADVERTISE_IP: { get_attribute: [SOURCE, public_ip_address] }
+            MESOS_ADVERTISE_PORT: { get_property: [SOURCE, port] }
+          implementation: scripts/start_slave.sh
+
+
+
