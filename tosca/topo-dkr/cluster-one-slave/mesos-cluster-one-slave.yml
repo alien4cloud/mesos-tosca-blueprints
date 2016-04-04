@@ -1,6 +1,6 @@
 tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
 description: A simple topology with a Mesos master and a Mesos slave on a standalone docker container
-template_name: mesos-cluster-SA-docker
+template_name: mesos-cluster-oneslave-docker
 template_version: 1.0.0-SNAPSHOT
 template_author: AFE
 
@@ -12,7 +12,7 @@ topology_template:
 
   node_templates:
 
-    container:
+    container1:
       type: com.toscaruntime.docker.nodes.Container
       properties:
         image_id: toscaruntime/ubuntu-trusty
@@ -27,12 +27,34 @@ topology_template:
             distribution: ubuntu
             version: 14.04
 
-    base:
+    container2:
+      type: com.toscaruntime.docker.nodes.Container
+      properties:
+        image_id: toscaruntime/ubuntu-trusty
+        exposed_ports:
+          - port: 5051
+        port_mappings:
+          - from: 5051
+            to: 5051
+      capabilities:
+        os:
+          properties:
+            distribution: ubuntu
+            version: 14.04
+
+    base1:
       type: alien.nodes.MesosBase
       properties:
         version: 0.27.2-2.0.15
       requirements:
-        - host: container
+        - host: container1
+
+    base2:
+      type: alien.nodes.MesosBase
+      properties:
+        version: 0.27.2-2.0.15
+      requirements:
+        - host: container2
 
     master:
       type: alien.nodes.MesosMaster
@@ -40,14 +62,14 @@ topology_template:
         cluster_name: "Simple TOSCA Mesos SA topology"
         log_dir: "/var/log/mesos/"
       requirements:
-        - host: base
+        - host: base1
 
     slave:
       type: alien.nodes.MesosSlave
       properties:
         log_dir: "/var/log/mesos/"
       requirements:
-        - host: container
+        - host: base2
         - master:
             node: master
             capability: alien.capabilities.MesosMaster

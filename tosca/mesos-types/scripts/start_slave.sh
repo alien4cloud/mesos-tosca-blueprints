@@ -2,4 +2,6 @@
 
 # Starts a mesos slave
 echo "Starting mesos slave..."
-sudo -E nohup mesos-slave >/dev/null 2>&1 &
+echo "export MESOS_MASTER=${MESOS_MASTER}" >> mesos_env.txt
+source mesos_env.txt
+sudo -E nohup mesos-slave >~/start-slave.log 2>&1 &

@@ -1,6 +1,6 @@
 tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
 description: A simple topology with a standalone mesos master
-template_name: mesos-master-SA-openstack
+template_name: mesos-cluster-SA-openstack
 template_version: 1.0.0-SNAPSHOT
 template_author: AFE
 
@@ -57,8 +57,20 @@ topology_template:
       properties:
         cluster_name: "Mesos Openstack"
         log_dir: "/var/log/mesos"
+        port: 5050
       requirements:
         - host: base
+
+    slave:
+      type: alien.nodes.MesosSlave
+      properties:
+        port: 5051
+        log_dir: "/var/log/mesos"
+      requirements:
+        - host: base
+        - master:
+            node: master
+            capability: alien.capabilities.MesosMaster
 
   outputs:
     mesos_url:

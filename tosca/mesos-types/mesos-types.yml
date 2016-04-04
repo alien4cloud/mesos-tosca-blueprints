@@ -62,9 +62,6 @@ node_types:
     description: >
       An abstract Mesos agent.
     properties:
-      port:
-        type: integer
-        default: 5050
       log_dir:
         type: string
         required: false
@@ -84,6 +81,9 @@ node_types:
         type: integer
         default: 1
         # Todo : Can we get this programatically ?
+      port:
+        type: integer
+        default: 5050
       zk:
         type: string
         description: >
@@ -99,21 +99,23 @@ node_types:
         required: false
     attributes:
       external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
-      master_url: { concat: [get_attribute: [HOST, ip_adress], ":", get_property: [SELF, port]] }
+      master_url: { concat: [get_attribute: [HOST, ip_address], ":", get_property: [SELF, port]] }
       # Todo : master_url: { get_operation_output: [CONFIGURE...] } - to retrieve zookeeper url
     interfaces:
       Standard:
        # Todo : do we need a configure operation ?
-        start:
+        configure:
           inputs:
             MESOS_CLUSTER: { get_property: [SELF, cluster_name] }
             MESOS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
-            MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
-            MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
+            #MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
+            #MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
+          implementation: scripts/generate_env_file.sh
+        start:
           implementation: scripts/start_master_SA.sh
 
   alien.nodes.MesosSlave:
@@ -121,6 +123,9 @@ node_types:
     description: >
       A Mesos slave agent.
     properties:
+      port:
+        type: integer
+        default: 5051
       attributes:
         type: string
         description: >
@@ -132,29 +137,28 @@ node_types:
         constraints:
           - valid_values: [ "posix/cpu,posix/mem", "cgroups/cpu,cgroups/mem" ]
           # Todo extend to more values
+    interfaces:
+      Standard:
+        configure:
+          inputs:
+            MESOS_IP: { get_attribute: [HOST, ip_address] }
+            MESOS_PORT: { get_property: [SELF, port] }
+            MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
+  #          MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
+  #          MESOS_ADVERTISE_PORT: { get_property: [HOST, port] }
+            MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
+          implementation: scripts/generate_env_file.sh
+
     requirements:
       - master: alien.capabilities.MesosMaster
         relationship: alien.relationships.MesosSlaveDependsOnMaster
         lower_bound: 1
-    # Note - Tout est deporté dans la relationship atm
-#    interfaces:
-#      Standard:
-#        start:
-#          inputs:
-#            MESOS_MASTER: { [master, ] }
-#            MESOS_IP: { get_attribute: [HOST, ip_address] }
-#            MESOS_PORT: { get_property: [SELF, port] }
-#            MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
-#            MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
-#            MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
-#          implementation: scripts/start_slave.sh
 
 capability_types:
   alien.capabilities.MesosContainer:
     derived_from: tosca.capabilities.Container
   alien.capabilities.MesosMaster:
     derived_from: tosca.capabilities.Node
-# TODO : est-ce que c'est ok de récuperer les ip de cette façon ?
 relationship_types:
   alien.relationships.MesosSlaveDependsOnMaster:
     derived_from: tosca.relationships.DependsOn
@@ -165,12 +169,8 @@ relationship_types:
       Configure:
         add_target:
           inputs:
+            # MESOS_MASTER: { concat: [ get_attribute: [TARGET, ip_address], ":", get_property: [TARGET, port]] }
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
-            MESOS_IP: { get_attribute: [SOURCE, ip_address] }
-            MESOS_PORT: { get_property: [SOURCE, port] }
-            MESOS_HOSTNAME: { get_attribute: [SOURCE, public_ip_address] }
-            MESOS_ADVERTISE_IP: { get_attribute: [SOURCE, public_ip_address] }
-            MESOS_ADVERTISE_PORT: { get_property: [SOURCE, port] }
           implementation: scripts/start_slave.sh
 
 

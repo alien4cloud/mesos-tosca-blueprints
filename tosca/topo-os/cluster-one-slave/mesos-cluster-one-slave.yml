@@ -1,6 +1,6 @@
 tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
 description: A simple topology with a standalone mesos master
-template_name: mesos-master-SA-openstack
+template_name: mesos-cluster-oneslave-openstack
 template_version: 1.0.0-SNAPSHOT
 template_author: AFE
 
@@ -22,7 +22,7 @@ topology_template:
         network_name: mesos-standalone
         cidr: "192.168.1.0/24"
 
-    compute:
+    compute1:
       type: com.toscaruntime.openstack.nodes.Compute
       properties:
         image: 02ddfcbb-9534-44d7-974d-5cfd36dfbcab
@@ -35,6 +35,7 @@ topology_template:
           #!/bin/sh
           sudo cp /etc/hosts /tmp/hosts
           echo 127.0.0.1 `hostname` | sudo tee /etc/hosts > /dev/null
+          { ip addr show eth0 | grep -Po 'inet \K[\d.]+' | tr "\n" " "; hostname ; } | sudo tee -a /etc/hosts >/dev/null
           cat  /tmp/hosts | sudo tee -a /etc/hosts > /dev/null
       requirements:
         - network: publicNetwork
@@ -45,20 +46,63 @@ topology_template:
             distribution: ubuntu
             version: 14.04
 
-    base:
+    compute2:
+      type: com.toscaruntime.openstack.nodes.Compute
+      properties:
+        image: 02ddfcbb-9534-44d7-974d-5cfd36dfbcab
+        flavor: 2
+        login: ubuntu
+        key_pair_name: Adrian
+        key_path: adrian.pem
+        security_group_names: [ openbar ]
+        user_data: |
+          #!/bin/sh
+          sudo cp /etc/hosts /tmp/hosts
+          echo 127.0.0.1 `hostname` | sudo tee /etc/hosts > /dev/null
+          { ip addr show eth0 | grep -Po 'inet \K[\d.]+' | tr "\n" " "; hostname ; } | sudo tee -a /etc/hosts >/dev/null
+          cat  /tmp/hosts | sudo tee -a /etc/hosts > /dev/null
+      requirements:
+        - network: publicNetwork
+        - network: privateNetwork
+      capabilities:
+        os:
+          properties:
+            distribution: ubuntu
+            version: 14.04
+
+    base1:
       type: alien.nodes.MesosBase
       properties:
         version: 0.27.2-2.0.15
       requirements:
-        - host: compute
+        - host: compute1
+
+    base2:
+      type: alien.nodes.MesosBase
+      properties:
+        version: 0.27.2-2.0.15
+      requirements:
+        - host: compute2
 
     master:
       type: alien.nodes.MesosMaster
       properties:
         cluster_name: "Mesos Openstack"
         log_dir: "/var/log/mesos"
+        port: 5050
       requirements:
-        - host: base
+        - host: base1
+
+    slave:
+      type: alien.nodes.MesosSlave
+      properties:
+        port: 5051
+        log_dir: "/var/log/mesos"
+      requirements:
+        - host: base2
+        - master:
+            node: master
+            capability: alien.capabilities.MesosMaster
 
   outputs:
     mesos_url:
