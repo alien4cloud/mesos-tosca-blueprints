@@ -119,6 +119,8 @@ node_types:
           implementation: scripts/generate_env_file.sh
         start:
           implementation: scripts/start_master_SA.sh
+        stop:
+          implementation: scripts/stop_master_SA.sh
 
   alien.nodes.MesosSlave:
     derived_from: alien.nodes.MesosAgent
@@ -160,6 +162,8 @@ node_types:
   #          MESOS_ADVERTISE_PORT: { get_property: [HOST, port] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
           implementation: scripts/generate_env_file.sh
+        stop:
+          implementation: scripts/stop_slave.sh
 
     requirements:
       - master: alien.capabilities.MesosMaster
