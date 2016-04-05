@@ -6,7 +6,7 @@ template_author: AFE
 
 imports:
   - openstack-provider-types:*
-  - mesos-types:0.2.0-SNAPSHOT
+  - mesos-types:1.0.0-SNAPSHOT
 
 topology_template:
 
@@ -31,12 +31,6 @@ topology_template:
         key_pair_name: Adrian
         key_path: adrian.pem
         security_group_names: [ openbar ]
-        user_data: |
-          #!/bin/sh
-          sudo cp /etc/hosts /tmp/hosts
-          echo 127.0.0.1 `hostname` | sudo tee /etc/hosts > /dev/null
-          { ip addr show eth0 | grep -Po 'inet \K[\d.]+' | tr "\n" " "; hostname ; } | sudo tee -a /etc/hosts >/dev/null
-          cat  /tmp/hosts | sudo tee -a /etc/hosts > /dev/null
       requirements:
         - network: publicNetwork
         - network: privateNetwork
@@ -55,12 +49,6 @@ topology_template:
         key_pair_name: Adrian
         key_path: adrian.pem
         security_group_names: [ openbar ]
-        user_data: |
-          #!/bin/sh
-          sudo cp /etc/hosts /tmp/hosts
-          echo 127.0.0.1 `hostname` | sudo tee /etc/hosts > /dev/null
-          { ip addr show eth0 | grep -Po 'inet \K[\d.]+' | tr "\n" " "; hostname ; } | sudo tee -a /etc/hosts >/dev/null
-          cat  /tmp/hosts | sudo tee -a /etc/hosts > /dev/null
       requirements:
         - network: publicNetwork
         - network: privateNetwork
@@ -69,15 +57,20 @@ topology_template:
           properties:
             distribution: ubuntu
             version: 14.04
+        scalable:
+          properties:
+            max_instances: 3
+            min_instances: 1
+            default_instances: 1
 
-    base1:
+    master_base:
       type: alien.nodes.MesosBase
       properties:
         version: 0.27.2-2.0.15
       requirements:
         - host: compute1
 
-    base2:
+    slave_base:
       type: alien.nodes.MesosBase
       properties:
         version: 0.27.2-2.0.15
@@ -91,7 +84,7 @@ topology_template:
         log_dir: "/var/log/mesos"
         port: 5050
       requirements:
-        - host: base1
+        - host: master_base
 
     slave:
       type: alien.nodes.MesosSlave
@@ -99,7 +92,7 @@ topology_template:
         port: 5051
         log_dir: "/var/log/mesos"
       requirements:
-        - host: base2
+        - host: slave_base
         - master:
             node: master
             capability: alien.capabilities.MesosMaster

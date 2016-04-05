@@ -41,6 +41,10 @@ node_types:
             LINUX_VERS: { get_property: [HOST, os, version] }
             MESOS_VERSION: { get_property: [SELF, version] }
           implementation: scripts/install_mesos.sh
+        configure:
+          inputs:
+            IP: { get_attribute: [HOST, ip_address] }
+          implementation: scripts/base/configure_host.sh
     capabilities:
       host: alien.capabilities.MesosContainer
     requirements:
