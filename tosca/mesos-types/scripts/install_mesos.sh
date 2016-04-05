@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Installing Mesos Base into directory $(pwd) on distrib ${LINUX_DISTR}"
 echo "Adding Mesosphere package repository.."

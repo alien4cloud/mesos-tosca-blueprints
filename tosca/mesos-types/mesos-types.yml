@@ -1,7 +1,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
 description: TOSCA simple profile with Mesos
 template_name: mesos-types
-template_version: 0.2.0-SNAPSHOT
+template_version: 1.0.0-SNAPSHOT
 template_author: FastConnect
 
 imports:
@@ -108,7 +108,9 @@ node_types:
           inputs:
             MESOS_CLUSTER: { get_property: [SELF, cluster_name] }
             MESOS_IP: { get_attribute: [HOST, ip_address] }
+            # MESOS_LIBPROCESS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
+            # MESOS_LIBPROCESS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
@@ -137,13 +139,23 @@ node_types:
         constraints:
           - valid_values: [ "posix/cpu,posix/mem", "cgroups/cpu,cgroups/mem" ]
           # Todo extend to more values
+      containerizers:
+        type: string
+        required: false
+        description: >
+          Comma-separated list of containerizer implementations to compose in order to provide containerization.
+          Available options are mesos, external, and docker (on Linux).
+          The order the containerizers are specified is the order they are tried. (default: mesos)
     interfaces:
       Standard:
         configure:
           inputs:
             MESOS_IP: { get_attribute: [HOST, ip_address] }
+#            MESOS_LIBPROCESS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
+#            MESOS_LIBPROCESS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
+            MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
   #          MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
   #          MESOS_ADVERTISE_PORT: { get_property: [HOST, port] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
@@ -151,17 +163,19 @@ node_types:
 
     requirements:
       - master: alien.capabilities.MesosMaster
-        relationship: alien.relationships.MesosSlaveDependsOnMaster
+        relationship: alien.relationships.MesosSlaveConnectsToMaster
         lower_bound: 1
+        upper_bound: 1
 
 capability_types:
   alien.capabilities.MesosContainer:
     derived_from: tosca.capabilities.Container
   alien.capabilities.MesosMaster:
     derived_from: tosca.capabilities.Node
+
 relationship_types:
-  alien.relationships.MesosSlaveDependsOnMaster:
-    derived_from: tosca.relationships.DependsOn
+  alien.relationships.MesosSlaveConnectsToMaster:
+    derived_from: tosca.relationships.ConnectsTo
     description: Relationship used to bind a slave to a master
     valid_source_types: [ alien.nodes.MesosSlaves ]
     valid_target_types: [ alien.capabilities.MesosMaster ]
@@ -169,7 +183,6 @@ relationship_types:
       Configure:
         add_target:
           inputs:
-            # MESOS_MASTER: { concat: [ get_attribute: [TARGET, ip_address], ":", get_property: [TARGET, port]] }
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
           implementation: scripts/start_slave.sh
 
