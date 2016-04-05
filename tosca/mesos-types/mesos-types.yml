@@ -40,7 +40,7 @@ node_types:
             LINUX_DISTR: { get_property: [HOST, os, distribution] }
             LINUX_VERS: { get_property: [HOST, os, version] }
             MESOS_VERSION: { get_property: [SELF, version] }
-          implementation: scripts/install_mesos.sh
+          implementation: scripts/base/install_mesos.sh
         configure:
           inputs:
             IP: { get_attribute: [HOST, ip_address] }
@@ -120,11 +120,11 @@ node_types:
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
             #MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
             #MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
-          implementation: scripts/generate_env_file.sh
+          implementation: scripts/agent/generate_env_file.sh
         start:
-          implementation: scripts/start_master_SA.sh
+          implementation: scripts/master/start_master_SA.sh
         stop:
-          implementation: scripts/stop_master_SA.sh
+          implementation: scripts/master/stop_master_SA.sh
 
   alien.nodes.MesosSlave:
     derived_from: alien.nodes.MesosAgent
@@ -165,9 +165,9 @@ node_types:
   #          MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
   #          MESOS_ADVERTISE_PORT: { get_property: [HOST, port] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/generate_env_file.sh
+          implementation: scripts/agent/generate_env_file.sh
         stop:
-          implementation: scripts/stop_slave.sh
+          implementation: scripts/slave/stop_slave.sh
 
     requirements:
       - master: alien.capabilities.MesosMaster
@@ -192,7 +192,7 @@ relationship_types:
         add_target:
           inputs:
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
-          implementation: scripts/start_slave.sh
+          implementation: scripts/slave/start_slave.sh
 
 
 
