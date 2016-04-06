@@ -1,0 +1,57 @@
+tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
+description: TOSCA template of a Mesos slave
+template_name: mesos-slave-template
+template_version: 1.0.0-SNAPSHOT
+template_author: FastConnect
+
+imports:
+  - tosca-normative-types:1.0.0-SNAPSHOT
+  - mesos-types:1.0.0-SNAPSHOT
+
+topology_template:
+  node_templates:
+
+    MesosBase:
+      type: alien.nodes.MesosBase
+      properties:
+        mesos_version: "0.27.2-2.0.15"
+      requirements:
+        - host:
+            node: Compute
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+    Compute:
+      type: tosca.nodes.Compute
+      capabilities:
+        os:
+          properties:
+            type: linux
+            distribution: ubuntu
+            architecture: x86_64
+        scalable:
+          properties:
+            min_instances: 1
+            max_instances: 1
+            default_instances: 1
+
+    MesosBase:
+      type: alien.nodes.MesosBase
+      properties:
+        mesos_version: "0.27.2-2.0.15"
+      requirements:
+        - host:
+            node: Compute
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+    MesosSlave:
+      type: alien.nodes.MesosSlave
+      properties:
+        port: 5051
+        isolation: "cgroups/cpu,cgroups/mem"
+        containerizers: mesos
+        log_dir: /var/log/mesos
+      requirements:
+        - host:
+            node: MesosBase
+            capability: alien.capabilities.MesosContainer
+            relationship: tosca.relationships.HostedOn

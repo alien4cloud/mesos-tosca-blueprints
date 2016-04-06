@@ -66,14 +66,14 @@ topology_template:
     master_base:
       type: alien.nodes.MesosBase
       properties:
-        version: 0.27.2-2.0.15
+        mesos_version: 0.27.2-2.0.15
       requirements:
         - host: compute1
 
     slave_base:
       type: alien.nodes.MesosBase
       properties:
-        version: 0.27.2-2.0.15
+        mesos_version: 0.27.2-2.0.15
       requirements:
         - host: compute2
 
