@@ -1,0 +1,111 @@
+tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
+description: Alien4Cloud generated service template
+template_name: Mesos
+template_version: 0.1.0-SNAPSHOT
+template_author: admin
+
+imports:
+  - tosca-normative-types:1.0.0-SNAPSHOT
+  - mesos-types:1.0.0-SNAPSHOT
+
+topology_template:
+  node_templates:
+    MesosMaster:
+      type: alien.nodes.MesosMaster
+      properties:
+        work_dir: /var/lib/mesos
+        quorum: 1
+        port: 5050
+        cluster_name: Mesos cluster
+        log_dir: /var/log/mesos
+      requirements:
+        - host:
+            node: MesosBase
+            capability: alien.capabilities.MesosContainer
+            relationship: tosca.relationships.HostedOn
+    MesosBase:
+      type: alien.nodes.MesosBase
+      properties:
+        mesos_version: "0.27.2-2.0.15"
+      requirements:
+        - host:
+            node: Compute1
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+    Network:
+      type: tosca.nodes.Network
+      properties:
+        ip_version: 4
+    Compute2:
+      type: tosca.nodes.Compute
+      requirements:
+        - network:
+            node: Network
+            capability: tosca.capabilities.Connectivity
+            relationship: tosca.relationships.Network
+      capabilities:
+        endpoint:
+          properties:
+            protocol: tcp
+            initiator: source
+            network_name: PRIVATE
+            secure: true
+        os:
+          properties:
+            type: linux
+            distribution: ubuntu
+            architecture: x86_64
+        scalable:
+          properties:
+            min_instances: 1
+            max_instances: 1
+            default_instances: 1
+    Compute1:
+      type: tosca.nodes.Compute
+      requirements:
+        - network:
+            node: Network
+            capability: tosca.capabilities.Connectivity
+            relationship: tosca.relationships.Network
+      capabilities:
+        endpoint:
+          properties:
+            protocol: tcp
+            initiator: source
+            network_name: PRIVATE
+            secure: true
+        os:
+          properties:
+            type: linux
+            distribution: ubuntu
+            architecture: x86_64
+        scalable:
+          properties:
+            min_instances: 1
+            max_instances: 1
+            default_instances: 1
+    MesosBase-2:
+      type: alien.nodes.MesosBase
+      properties:
+        mesos_version: "0.27.2-2.0.15"
+      requirements:
+        - host:
+            node: Compute2
+            capability: tosca.capabilities.Container
+            relationship: tosca.relationships.HostedOn
+    MesosSlave:
+      type: alien.nodes.MesosSlave
+      properties:
+        port: 5051
+        isolation: "cgroups/cpu,cgroups/mem"
+        containerizers: mesos
+        log_dir: /var/log/mesos
+      requirements:
+        - host:
+            node: MesosBase-2
+            capability: alien.capabilities.MesosContainer
+            relationship: tosca.relationships.HostedOn
+        - master:
+            node: MesosMaster
+            capability: alien.capabilities.MesosMaster
+            relationship: alien.relationships.MesosSlaveConnectsToMaster

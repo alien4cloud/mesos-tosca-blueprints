@@ -15,9 +15,9 @@ node_types:
       which is used to host Mesos Agents, eg. a Mesos master or a Mesos slave. It currently supports
       REHL, Centos, Ubuntu and Debian distributions.
     tags:
-      icon: images/icon.svg
+      icon: /images/icon.png
     properties:
-      version:
+      mesos_version:
         type: string
         required: false
       firewall_rules:
@@ -39,7 +39,7 @@ node_types:
           inputs:
             LINUX_DISTR: { get_property: [HOST, os, distribution] }
             LINUX_VERS: { get_property: [HOST, os, version] }
-            MESOS_VERSION: { get_property: [SELF, version] }
+            MESOS_VERSION: { get_property: [SELF, mesos_version] }
           implementation: scripts/base/install_mesos.sh
         configure:
           inputs:
@@ -49,7 +49,7 @@ node_types:
       host: alien.capabilities.MesosContainer
     requirements:
       - host: tosca.nodes.Compute
-        relationship: tosca.relationships.HostedOn
+        type: tosca.relationships.HostedOn
         lower_bound: 1
         upper_bound: 1
         node_filter:
@@ -68,10 +68,11 @@ node_types:
     properties:
       log_dir:
         type: string
+        default: "/var/log/mesos"
         required: false
     requirements:
       - host: alien.capabilities.MesosContainer
-        relationship: tosca.relationships.HostedOn
+        type: tosca.relationships.HostedOn
 
   alien.nodes.MesosMaster:
     derived_from: alien.nodes.MesosAgent
@@ -105,6 +106,8 @@ node_types:
       external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
       master_url: { concat: [get_attribute: [HOST, ip_address], ":", get_property: [SELF, port]] }
       # Todo : master_url: { get_operation_output: [CONFIGURE...] } - to retrieve zookeeper url
+    capabilities:
+      master: alien.capabilities.MesosMaster
     interfaces:
       Standard:
        # Todo : do we need a configure operation ?
@@ -112,14 +115,10 @@ node_types:
           inputs:
             MESOS_CLUSTER: { get_property: [SELF, cluster_name] }
             MESOS_IP: { get_attribute: [HOST, ip_address] }
-            # MESOS_LIBPROCESS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
-            # MESOS_LIBPROCESS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-            #MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
-            #MESOS_ADVERTISE_PORT: { get_property: [SELF, port] }
           implementation: scripts/agent/generate_env_file.sh
         start:
           implementation: scripts/master/start_master_SA.sh
@@ -157,13 +156,9 @@ node_types:
         configure:
           inputs:
             MESOS_IP: { get_attribute: [HOST, ip_address] }
-#            MESOS_LIBPROCESS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
-#            MESOS_LIBPROCESS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
-  #          MESOS_ADVERTISE_IP: { get_attribute: [HOST, public_ip_address] }
-  #          MESOS_ADVERTISE_PORT: { get_property: [HOST, port] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
           implementation: scripts/agent/generate_env_file.sh
         stop:
@@ -171,7 +166,7 @@ node_types:
 
     requirements:
       - master: alien.capabilities.MesosMaster
-        relationship: alien.relationships.MesosSlaveConnectsToMaster
+        type: alien.relationships.MesosSlaveConnectsToMaster
         lower_bound: 1
         upper_bound: 1
 
@@ -185,8 +180,8 @@ relationship_types:
   alien.relationships.MesosSlaveConnectsToMaster:
     derived_from: tosca.relationships.ConnectsTo
     description: Relationship used to bind a slave to a master
-    valid_source_types: [ alien.nodes.MesosSlaves ]
-    valid_target_types: [ alien.capabilities.MesosMaster ]
+    valid_sources: [ alien.nodes.MesosSlaves ]
+    valid_targets: [ alien.capabilities.MesosMaster ]
     interfaces:
       Configure:
         add_target:
