@@ -98,9 +98,9 @@ if { [ ${LINUX_DISTR} = 'redhat' ] || [ ${LINUX_DISTR} = 'centos' ]; } && [ ${LI
     systemctl disable mesos-master.service
     systemctl disable zookeeper.service
 else
-    sudo sh -c "echo manual > /etc/init/mesos-master.override"
-    sudo sh -c "echo manual > /etc/init/mesos-slave.override"
-    sudo sh -c "echo manual > /etc/init/zookeeper.override"
+    echo "manual" | sudo tee /etc/init/mesos-master.override >/dev/null
+    echo "manual" | sudo tee /etc/init/mesos-slave.override >/dev/null
+    echo "manual" | sudo tee /etc/init/zookeeper.override >/dev/null
 fi
 
 exit 0
