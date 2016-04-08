@@ -31,6 +31,9 @@ topology_template:
         key_pair_name: Adrian
         key_path: adrian.pem
         security_group_names: [ openbar ]
+        user_data: |
+          #!/bin/sh
+          sed -i -e 's/^Defaults\s\+requiretty/# \0/' /etc/sudoers
       requirements:
         - network: publicNetwork
         - network: privateNetwork
@@ -49,6 +52,9 @@ topology_template:
         key_pair_name: Adrian
         key_path: adrian.pem
         security_group_names: [ openbar ]
+        user_data: |
+          #!/bin/sh
+          sed -i -e 's/^Defaults\s\+requiretty/# \0/' /etc/sudoers
       requirements:
         - network: publicNetwork
         - network: privateNetwork
