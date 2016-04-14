@@ -60,28 +60,18 @@ node_types:
                   - architecture: { equal: x86_64 }
                   - distribution: { valid_values: [ debian, rhel, ubuntu, centos ] }
 
-  alien.nodes.MesosAgent:
-    abstract: true
-    derived_from: tosca.nodes.SoftwareComponent
-    description: >
-      An abstract Mesos agent.
-    properties:
-      log_dir:
-        type: string
-        default: "/var/log/mesos"
-        required: false
-    requirements:
-      - host: alien.capabilities.MesosContainer
-        type: tosca.relationships.HostedOn
-
   alien.nodes.MesosMaster:
-    derived_from: alien.nodes.MesosAgent
+    derived_from: tosca.nodes.SoftwareComponent
     description: >
       A Mesos master agent.
     properties:
       work_dir:
         type: string
         default: /var/lib/mesos
+        log_dir:
+          type: string
+          default: "/var/log/mesos"
+          required: false
       quorum:
         type: integer
         default: 1
@@ -108,6 +98,9 @@ node_types:
       # Todo : master_url: { get_operation_output: [CONFIGURE...] } - to retrieve zookeeper url
     capabilities:
       master: alien.capabilities.MesosMaster
+    requirements:
+      - host: alien.capabilities.MesosContainer
+        type: tosca.relationships.HostedOn
     interfaces:
       Standard:
        # Todo : do we need a configure operation ?
@@ -126,10 +119,14 @@ node_types:
           implementation: scripts/master/stop_master_SA.sh
 
   alien.nodes.MesosSlave:
-    derived_from: alien.nodes.MesosAgent
+    derived_from: tosca.nodes.SoftwareComponent
     description: >
       A Mesos slave agent.
     properties:
+      log_dir:
+        type: string
+        default: "/var/log/mesos"
+        required: false
       port:
         type: integer
         default: 5051
@@ -163,8 +160,9 @@ node_types:
           implementation: scripts/agent/generate_env_file.sh
         stop:
           implementation: scripts/slave/stop_slave.sh
-
     requirements:
+      - host: alien.capabilities.MesosContainer
+        type: tosca.relationships.HostedOn
       - master: alien.capabilities.MesosMaster
         type: alien.relationships.MesosSlaveConnectsToMaster
         lower_bound: 1
