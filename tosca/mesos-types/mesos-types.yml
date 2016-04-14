@@ -1,7 +1,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
 description: TOSCA simple profile with Mesos
 template_name: mesos-types
-template_version: 1.0.0-SNAPSHOT
+template_version: 1.1.0-SNAPSHOT
 template_author: FastConnect
 
 imports:
@@ -37,8 +37,8 @@ node_types:
       Standard:
         create:
           inputs:
-            LINUX_DISTR: { get_property: [HOST, os, distribution] }
-            LINUX_VERS: { get_property: [HOST, os, version] }
+            OS_DISTR: { get_property: [HOST, os, distribution] }
+            OS_VERS: { get_property: [HOST, os, version] }
             MESOS_VERSION: { get_property: [SELF, mesos_version] }
           implementation: scripts/base/install_mesos.sh
         configure:
@@ -60,6 +60,11 @@ node_types:
                   - architecture: { equal: x86_64 }
                   - distribution: { valid_values: [ debian, rhel, ubuntu, centos ] }
 
+  alien.nodes.MesosZookeeper:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      A Zookeeper agent.
+
   alien.nodes.MesosMaster:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
@@ -72,22 +77,9 @@ node_types:
           type: string
           default: "/var/log/mesos"
           required: false
-      quorum:
-        type: integer
-        default: 1
-        # Todo : Can we get this programatically ?
       port:
         type: integer
         default: 5050
-      zk:
-        type: string
-        description: >
-          ZooKeeper URL (used for leader election amongst masters) May be one of:
-           - zk://host1:port1,host2:port2,.../path
-           - zk://username:password@host1:port1,host2:port2,.../path
-           - file:///path/to/file (where file contains one of the above)
-          NOTE: Not required if master is run in standalone mode (non-HA).
-        required: false
       cluster_name:
         type: string
         default: "Mesos cluster"
@@ -112,7 +104,7 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/agent/generate_env_file.sh
+          implementation: scripts/generate_env_file.sh
         start:
           implementation: scripts/master/start_master_SA.sh
         stop:
@@ -157,7 +149,7 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/agent/generate_env_file.sh
+          implementation: scripts/generate_env_file.sh
         stop:
           implementation: scripts/slave/stop_slave.sh
     requirements:
@@ -172,7 +164,7 @@ capability_types:
   alien.capabilities.MesosContainer:
     derived_from: tosca.capabilities.Container
   alien.capabilities.MesosMaster:
-    derived_from: tosca.capabilities.Node
+    derived_from: tosca.capabilities.Endpoint
 
 relationship_types:
   alien.relationships.MesosSlaveConnectsToMaster:
