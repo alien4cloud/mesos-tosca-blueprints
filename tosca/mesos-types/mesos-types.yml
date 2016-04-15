@@ -8,16 +8,14 @@ imports:
   - "tosca-normative-types:1.0.0-SNAPSHOT"
 
 node_types:
-  alien.nodes.MesosBase:
+  alien.nodes.MesosMaster:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
-      A Mesos base node. This component defines common properties and install scripts for a Mesos base,
-      which is used to host Mesos Agents, eg. a Mesos master or a Mesos slave. It currently supports
-      REHL, Centos, Ubuntu and Debian distributions.
+      A Mesos master agent.
     tags:
       icon: /images/icon.png
     properties:
-      mesos_version:
+      version:
         type: string
         required: false
       firewall_rules:
@@ -33,20 +31,25 @@ node_types:
         required: false
         description: >
           List of modules in a JSON-format to be loaded and be available to the internal subsystems.
-    interfaces:
-      Standard:
-        create:
-          inputs:
-            OS_DISTR: { get_property: [HOST, os, distribution] }
-            OS_VERS: { get_property: [HOST, os, version] }
-            MESOS_VERSION: { get_property: [SELF, mesos_version] }
-          implementation: scripts/base/install_mesos.sh
-        configure:
-          inputs:
-            IP: { get_attribute: [HOST, ip_address] }
-          implementation: scripts/base/configure_host.sh
+      work_dir:
+        type: string
+        default: /var/lib/mesos
+      log_dir:
+        type: string
+        default: "/var/log/mesos"
+        required: false
+      port:
+        type: integer
+        default: 5050
+      cluster_name:
+        type: string
+        default: "Mesos cluster"
+        required: false
+    attributes:
+      external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
+      master_url: { get_operation_output: [SELF, Standard, start, master_url] }
     capabilities:
-      host: alien.capabilities.MesosContainer
+      master: alien.capabilities.MesosMaster
     requirements:
       - host: tosca.nodes.Compute
         type: tosca.relationships.HostedOn
@@ -59,43 +62,14 @@ node_types:
                   - type: { equal: linux }
                   - architecture: { equal: x86_64 }
                   - distribution: { valid_values: [ debian, rhel, ubuntu, centos ] }
-
-  alien.nodes.MesosZookeeper:
-    derived_from: tosca.nodes.SoftwareComponent
-    description: >
-      A Zookeeper agent.
-
-  alien.nodes.MesosMaster:
-    derived_from: tosca.nodes.SoftwareComponent
-    description: >
-      A Mesos master agent.
-    properties:
-      work_dir:
-        type: string
-        default: /var/lib/mesos
-        log_dir:
-          type: string
-          default: "/var/log/mesos"
-          required: false
-      port:
-        type: integer
-        default: 5050
-      cluster_name:
-        type: string
-        default: "Mesos cluster"
-        required: false
-    attributes:
-      external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
-      master_url: { concat: [get_attribute: [HOST, ip_address], ":", get_property: [SELF, port]] }
-      # Todo : master_url: { get_operation_output: [CONFIGURE...] } - to retrieve zookeeper url
-    capabilities:
-      master: alien.capabilities.MesosMaster
-    requirements:
-      - host: alien.capabilities.MesosContainer
-        type: tosca.relationships.HostedOn
     interfaces:
       Standard:
-       # Todo : do we need a configure operation ?
+        create:
+          inputs:
+            OS_DISTR: { get_property: [HOST, os, distribution] }
+            OS_VERS: { get_property: [HOST, os, version] }
+            MESOS_VERSION: { get_property: [SELF, version] }
+          implementation: scripts/base/install_mesos.sh
         configure:
           inputs:
             MESOS_CLUSTER: { get_property: [SELF, cluster_name] }
@@ -104,17 +78,35 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/generate_env_file.sh
+          implementation: scripts/base/configure.sh
         start:
-          implementation: scripts/master/start_master_SA.sh
+          inputs:
+            IP: { get_attribute: [HOST, ip_address] }
+          implementation: scripts/master/start.sh
         stop:
-          implementation: scripts/master/stop_master_SA.sh
+          implementation: scripts/master/stop.sh
 
   alien.nodes.MesosSlave:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       A Mesos slave agent.
     properties:
+      version:
+        type: string
+        required: false
+      firewall_rules:
+        type: string
+        required: false
+      hooks:
+        type: string
+        required: false
+        description: >
+          A comma-separated list of hook modules to be installed inside master/slave.
+      modules:
+        type: string
+        required: false
+        description: >
+          List of modules in a JSON-format to be loaded and be available to the internal subsystems.
       log_dir:
         type: string
         default: "/var/log/mesos"
@@ -142,6 +134,12 @@ node_types:
           The order the containerizers are specified is the order they are tried. (default: mesos)
     interfaces:
       Standard:
+        create:
+          inputs:
+            OS_DISTR: { get_property: [HOST, os, distribution] }
+            OS_VERS: { get_property: [HOST, os, version] }
+            MESOS_VERSION: { get_property: [SELF, version] }
+          implementation: scripts/base/install_mesos.sh
         configure:
           inputs:
             MESOS_IP: { get_attribute: [HOST, ip_address] }
@@ -149,12 +147,21 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/generate_env_file.sh
+          implementation: scripts/base/configure.sh
         stop:
-          implementation: scripts/slave/stop_slave.sh
+          implementation: scripts/slave/stop.sh
     requirements:
-      - host: alien.capabilities.MesosContainer
+      - host: tosca.nodes.Compute
         type: tosca.relationships.HostedOn
+        lower_bound: 1
+        upper_bound: 1
+        node_filter:
+          capabilities:
+            - tosca.capabilities.OperatingSystem:
+                properties:
+                  - type: { equal: linux }
+                  - architecture: { equal: x86_64 }
+                  - distribution: { valid_values: [ debian, rhel, ubuntu, centos ] }
       - master: alien.capabilities.MesosMaster
         type: alien.relationships.MesosSlaveConnectsToMaster
         lower_bound: 1
@@ -177,7 +184,7 @@ relationship_types:
         add_target:
           inputs:
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
-          implementation: scripts/slave/start_slave.sh
+          implementation: scripts/slave/start.sh
 
 
 

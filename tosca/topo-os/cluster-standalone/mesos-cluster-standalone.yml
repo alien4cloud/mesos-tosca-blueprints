@@ -22,7 +22,7 @@ topology_template:
         network_name: mesos-standalone
         cidr: "192.168.1.0/24"
 
-    compute:
+    compute1:
       type: com.toscaruntime.openstack.nodes.Compute
       properties:
         image: 02ddfcbb-9534-44d7-974d-5cfd36dfbcab
@@ -33,9 +33,7 @@ topology_template:
         security_group_names: [ openbar ]
         user_data: |
           #!/bin/sh
-          sudo cp /etc/hosts /tmp/hosts
-          echo 127.0.0.1 `hostname` | sudo tee /etc/hosts > /dev/null
-          cat  /tmp/hosts | sudo tee -a /etc/hosts > /dev/null
+          sed -i -e 's/^Defaults\s\+requiretty/# \0/' /etc/sudoers
       requirements:
         - network: publicNetwork
         - network: privateNetwork
