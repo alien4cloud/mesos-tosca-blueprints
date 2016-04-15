@@ -16,7 +16,7 @@ zkURL="${zkURL%?}/mesos"
 
 # Starts a mesos Master
 echo "Starting mesos master..."
-source ~/mesos_install/mesos_env.txt
+source ~/mesos_install/mesos_env.sh
 sudo -E nohup mesos-master --zk=${zkURL} >/dev/null 2>&1 &
 
 sleep 5

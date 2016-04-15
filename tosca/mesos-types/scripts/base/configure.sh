@@ -7,9 +7,9 @@ cat /tmp/hosts | sudo tee -a /etc/hosts >/dev/null
 
 # Create environnement variables
 mkdir -p ~/mesos_install
-touch ~/mesos_install/mesos_env.txt
+touch ~/mesos_install/mesos_env.sh
 while IFS='=' read name value; do
   if [ -n "$value" ]; then
-    echo "export ${name}=\"${value}\"" >> ~/mesos_install/mesos_env.txt
+    echo "export ${name}=\"${value}\"" >> ~/mesos_install/mesos_env.sh
   fi
 done < <(env | grep "^MESOS_")
