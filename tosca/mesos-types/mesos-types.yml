@@ -45,6 +45,9 @@ node_types:
         type: string
         default: "Mesos cluster"
         required: false
+    artifacts:
+      - zoo_config: artifacts/zoo.cfg
+        type: tosca.artifacts.File
     attributes:
       external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
       master_url: { get_operation_output: [SELF, Standard, start, master_url] }
