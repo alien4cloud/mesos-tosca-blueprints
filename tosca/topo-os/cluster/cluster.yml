@@ -1,0 +1,102 @@
+tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
+description: A simple mesos cluster
+template_name: mesos-cluster
+template_version: 1.0.0-SNAPSHOT
+template_author: AFE
+
+imports:
+  - openstack-provider-types:*
+  - mesos-types:1.1.0-SNAPSHOT
+
+topology_template:
+
+  node_templates:
+    publicNetwork:
+      type: com.toscaruntime.openstack.nodes.ExternalNetwork
+      properties:
+        network_name: net-pub
+
+    privateNetwork:
+      type: com.toscaruntime.openstack.nodes.Network
+      properties:
+        network_name: mesos-standalone
+        cidr: "192.168.1.0/24"
+
+    compute1:
+      type: com.toscaruntime.openstack.nodes.Compute
+      properties:
+        image: 02ddfcbb-9534-44d7-974d-5cfd36dfbcab
+        flavor: 2
+        login: ubuntu
+        key_pair_name: Adrian
+        key_path: adrian.pem
+        security_group_names: [ openbar ]
+        user_data: |
+          #!/bin/sh
+          sed -i -e 's/^Defaults\s\+requiretty/# \0/' /etc/sudoers
+      requirements:
+        - network: publicNetwork
+        - network: privateNetwork
+      capabilities:
+        os:
+          properties:
+            distribution: ubuntu
+            version: 14.04
+        scalable:
+          properties:
+            max_instances: 5
+            min_instances: 3
+            default_instances: 3
+
+    compute2:
+      type: com.toscaruntime.openstack.nodes.Compute
+      properties:
+        image: 02ddfcbb-9534-44d7-974d-5cfd36dfbcab
+        flavor: 2
+        login: ubuntu
+        key_pair_name: Adrian
+        key_path: adrian.pem
+        security_group_names: [ openbar ]
+        user_data: |
+          #!/bin/sh
+          sed -i -e 's/^Defaults\s\+requiretty/# \0/' /etc/sudoers
+      requirements:
+        - network: publicNetwork
+        - network: privateNetwork
+      capabilities:
+        os:
+          properties:
+            distribution: ubuntu
+            version: 14.04
+        scalable:
+          properties:
+            max_instances: 5
+            min_instances: 1
+            default_instances: 1
+
+    master:
+      type: alien.nodes.MesosMaster
+      properties:
+        version: 0.27.2-2.0.15
+        cluster_name: "Mesos Openstack"
+        log_dir: "/var/log/mesos"
+        port: 5050
+      requirements:
+        - host: compute1
+
+    slave:
+      type: alien.nodes.MesosSlave
+      properties:
+        version: 0.27.2-2.0.15
+        port: 5051
+        log_dir: "/var/log/mesos"
+      requirements:
+        - host: compute2
+        - master:
+            node: master
+            capability: alien.capabilities.MesosMaster
+
+  outputs:
+    mesos_url:
+      description: The URL to access Mesos
+      value: { get_attribute: [master, external_url] }
