@@ -11,10 +11,11 @@ do
     # Put together the zk url and the zoo.cfg file
     zkHost="${inst}_IP"
     zkURL="$zkURL${!zkHost}:2181,"
-    echo "server.${i}=${zkHost}:2888:3888" | sudo tee -a /etc/zookeeper/conf/zoo.cfg >/dev/null
+    echo "server.${i}=${!zkHost}:2888:3888" | sudo tee -a /etc/zookeeper/conf/zoo.cfg >/dev/null
 
     # Assign each node a unique id
-    [ $inst -eq $INSTANCE ] && (echo $i | sudo tee /var/lib/zookeeper/conf/myid >/dev/null)
+    [ $inst == $INSTANCE ] && (echo $i | sudo tee /var/lib/zookeeper/myid >/dev/null)
+    i=$((i+1))
 done
 zkURL="${zkURL%?}/mesos"
 # Quorum for replicated log must be a majority of masters

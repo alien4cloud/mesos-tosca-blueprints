@@ -93,6 +93,8 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       A Mesos slave agent.
+    tags:
+      icon: /images/icon.png
     properties:
       version:
         type: string
@@ -171,10 +173,10 @@ node_types:
         upper_bound: 1
 
 capability_types:
-  alien.capabilities.MesosContainer:
-    derived_from: tosca.capabilities.Container
   alien.capabilities.MesosMaster:
-    derived_from: tosca.capabilities.Endpoint
+    derived_from: tosca.capabilities.Root
+  alien.capabilities.MesosSlave:
+    derived_from: tosca.capabilities.Root
 
 relationship_types:
   alien.relationships.MesosSlaveConnectsToMaster:
