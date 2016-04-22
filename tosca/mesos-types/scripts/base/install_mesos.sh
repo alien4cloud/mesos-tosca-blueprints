@@ -1,6 +1,13 @@
 #!/bin/bash
 
 echo "Installing Mesos Base into directory $(pwd) on distrib ${OS_DISTR}"
+
+# Fix /etc/hosts
+sudo cp /etc/hosts /tmp/hosts
+echo "${IP}" `hostname` | sudo tee /etc/hosts >/dev/null
+cat /tmp/hosts | sudo tee -a /etc/hosts >/dev/null
+sudo rm /tmp/hosts
+
 echo "Adding Mesosphere package repository.."
 case ${OS_DISTR} in
     "debian"|"ubuntu")

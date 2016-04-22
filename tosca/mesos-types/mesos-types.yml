@@ -71,6 +71,7 @@ node_types:
           inputs:
             OS_DISTR: { get_property: [HOST, os, distribution] }
             OS_VERS: { get_property: [HOST, os, version] }
+            IP: { get_attribute: [HOST, ip_address] }
             MESOS_VERSION: { get_property: [SELF, version] }
           implementation: scripts/base/install_mesos.sh
         configure:
