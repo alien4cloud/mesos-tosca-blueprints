@@ -2,13 +2,9 @@
 
 # Starts a mesos slave
 echo "Starting mesos slave..."
-echo "export MESOS_MASTER=\"${MESOS_MASTER}\"" >> ~/mesos_install/mesos_env.txt
 source ~/mesos_install/mesos_env.sh
-sudo -E nohup mesos-slave >/dev/null 2>&1 &
+sudo -E nohup mesos-slave --master="${MESOS_MASTER}" >/dev/null 2>&1 &
 
 sleep 5
-if [ $? = 0 ]; then
-    echo "Slave started"
-else
-    exit 1
-fi
+ps -ef | grep -v grep | grep mesos-slave >/dev/null || ( echo "Failed to start slave"; exit 1)
+

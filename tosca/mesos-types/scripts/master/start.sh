@@ -22,16 +22,16 @@ zkURL="${zkURL%?}/mesos"
 quorum=$((1 + $(echo $INSTANCES | tr "," " " | wc -w)/2))
 
 # Starts zookeeper
-sudo service zookeeper restart # TODO use the zk binary instead of mesosphere services : sudo -E nohup bin/zkserver.sh >/dev/null 2>&1 &
+sudo service zookeeper start # TODO use the zk binary instead of mesosphere services : sudo -E nohup bin/zkserver.sh >/dev/null 2>&1 &
 sleep 5
 
 # Starts a mesos Master
 echo "Starting mesos master..."
 source ~/mesos_install/mesos_env.sh
 
-echo "sudo -E nohup mesos-master --zk=${zkURL} --quorum=${quorum} >/dev/null 2>~/mesos_install/err.log &"
-sudo -E nohup mesos-master --zk=${zkURL} --quorum=${quorum} >/dev/null 2>~/mesos_install/err.log &
+echo "sudo -E nohup mesos-master --zk=${zkURL} --quorum=${quorum} &"
+sudo -E nohup mesos-master --zk="${zkURL}" --quorum="${quorum}" 0</dev/null &>/dev/null &
 sleep 5
 
-export master_url=${zkURL}
-ps -ef | grep -v grep | grep mesos-master >/dev/null || exit 1
+export master_url="${zkURL}"
+ps -ef | grep -v grep | grep mesos-master >/dev/null || (echo "Failed to start master"; exit 1)
