@@ -31,7 +31,7 @@ source ~/mesos_install/mesos_env.sh
 
 echo "sudo -E nohup mesos-master --zk=${zkURL} --quorum=${quorum} &"
 sudo -E nohup mesos-master --zk="${zkURL}" --quorum="${quorum}" 0</dev/null &>/dev/null &
-sleep 5
+sleep 10
 
 export master_url="${zkURL}"
 ps -ef | grep -v grep | grep mesos-master >/dev/null || (echo "Failed to start master"; exit 1)
