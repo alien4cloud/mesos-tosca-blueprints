@@ -33,5 +33,5 @@ echo "sudo -E nohup mesos-master --zk=${zkURL} --quorum=${quorum} &"
 sudo -E nohup mesos-master --zk="${zkURL}" --quorum="${quorum}" 0</dev/null &>/dev/null &
 sleep 10
 
-export master_url="${zkURL}"
+export master_url="${zkURL}" # TODO: for some reason this replaces commas by whitespaces
 ps -ef | grep -v grep | grep mesos-master >/dev/null || (echo "Failed to start master"; exit 1)

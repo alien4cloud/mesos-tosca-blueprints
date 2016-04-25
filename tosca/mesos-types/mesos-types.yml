@@ -149,6 +149,8 @@ node_types:
             MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
           implementation: scripts/base/configure.sh
+        start:
+          implementation: scripts/slave/start.sh
         stop:
           implementation: scripts/slave/stop.sh
     requirements:
@@ -182,10 +184,10 @@ relationship_types:
     valid_targets: [ alien.capabilities.MesosMaster ]
     interfaces:
       Configure:
-        add_target:
+        post_configure_source:
           inputs:
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
-          implementation: scripts/slave/start.sh
+          implementation: scripts/slave/configure_connectsToMaster.sh
 
 
 
