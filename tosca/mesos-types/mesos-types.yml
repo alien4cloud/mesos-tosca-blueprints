@@ -47,7 +47,7 @@ node_types:
         type: tosca.artifacts.File
     attributes:
       external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
-      master_url: { get_operation_output: [SELF, Standard, start, master_url] }
+      master_url: { get_operation_output: [SELF, Standard, configure, master_url] }
     capabilities:
       master: alien.capabilities.MesosMaster
     requirements:
@@ -70,7 +70,7 @@ node_types:
             OS_VERS: { get_property: [HOST, os, version] }
             IP: { get_attribute: [HOST, ip_address] }
             MESOS_VERSION: { get_property: [SELF, component_version] }
-          implementation: scripts/base/install_mesos.sh
+          implementation: scripts/install_mesos.sh
         configure:
           inputs:
             MESOS_CLUSTER: { get_property: [SELF, cluster_name] }
@@ -79,10 +79,8 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/base/configure.sh
+          implementation: scripts/master/configure.sh
         start:
-          inputs:
-            IP: { get_attribute: [HOST, ip_address] }
           implementation: scripts/master/start.sh
         stop:
           implementation: scripts/master/stop.sh
@@ -140,7 +138,7 @@ node_types:
             OS_VERS: { get_property: [HOST, os, version] }
             IP: { get_attribute: [HOST, ip_address] }
             MESOS_VERSION: { get_property: [SELF, component_version] }
-          implementation: scripts/base/install_mesos.sh
+          implementation: scripts/install_mesos.sh
         configure:
           inputs:
             MESOS_IP: { get_attribute: [HOST, ip_address] }
@@ -148,7 +146,7 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
-          implementation: scripts/base/configure.sh
+          implementation: scripts/slave/configure.sh
         start:
           implementation: scripts/slave/start.sh
         stop:

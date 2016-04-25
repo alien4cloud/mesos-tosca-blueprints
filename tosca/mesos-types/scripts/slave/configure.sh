@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# Create environnement variables
+# Prepare a sh script to export mesos environment variables
 mkdir -p ~/mesos_install
 touch ~/mesos_install/mesos_env.sh
 while IFS='=' read name value; do

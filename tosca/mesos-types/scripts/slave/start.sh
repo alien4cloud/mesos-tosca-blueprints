@@ -1,8 +1,10 @@
 #!/bin/bash -e
 
-# Starts a mesos slave
+
 echo "Starting mesos slave..."
+# Source Mesos environment variables
 source ~/mesos_install/mesos_env.sh
+# Start a mesos slave
 sudo -E nohup mesos-slave >/dev/null 2>&1 &
 
 sleep 5
