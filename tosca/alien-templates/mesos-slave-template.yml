@@ -6,20 +6,10 @@ template_author: FastConnect
 
 imports:
   - tosca-normative-types:1.0.0-SNAPSHOT
-  - mesos-types:1.0.0-SNAPSHOT
+  - mesos-types:1.1.0-SNAPSHOT
 
 topology_template:
   node_templates:
-
-    MesosBase:
-      type: alien.nodes.MesosBase
-      properties:
-        mesos_version: "0.27.2-2.0.15"
-      requirements:
-        - host:
-            node: Compute
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
     Compute:
       type: tosca.nodes.Compute
       capabilities:
@@ -34,15 +24,6 @@ topology_template:
             max_instances: 1
             default_instances: 1
 
-    MesosBase:
-      type: alien.nodes.MesosBase
-      properties:
-        mesos_version: "0.27.2-2.0.15"
-      requirements:
-        - host:
-            node: Compute
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
     MesosSlave:
       type: alien.nodes.MesosSlave
       properties:
@@ -52,6 +33,6 @@ topology_template:
         log_dir: /var/log/mesos
       requirements:
         - host:
-            node: MesosBase
-            capability: alien.capabilities.MesosContainer
+            node: Compute
+            capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
