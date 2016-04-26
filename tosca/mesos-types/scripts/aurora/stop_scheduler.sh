@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
-# Start Aurora service
+# Stop Aurora service
 if [ $OS = 'ubuntu' ]; then
-    sudo start aurora-scheduler
+    sudo stop aurora-scheduler
 elif [ $OS = 'centos' ]; then
-    sudo systemctl start aurora
+    sudo systemctl stop aurora
 else
     exit 1
 fi

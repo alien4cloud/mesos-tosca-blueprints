@@ -187,6 +187,14 @@ node_types:
           inputs:
             OS: { get_property: [HOST, os, distribution] }
           implementation: scripts/aurora/install_scheduler.sh
+        start:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/aurora/start_scheduler.sh
+        stop:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/aurora/stop_scheduler.sh
 
   alien.nodes.AuroraExecutor:
     derived_from: tosca.nodes.SoftwareComponent
