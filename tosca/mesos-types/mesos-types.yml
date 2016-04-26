@@ -181,6 +181,10 @@ node_types:
         type: alien.relationships.AuroraSchedulerHostedOnMaster
         lower_bound: 1
         upper_bound: 1
+        node_filter:
+          properties:
+            - component_version: { equal: 0.25.0-0.2.70 }
+
     interfaces:
       Standard:
         create:
@@ -207,6 +211,10 @@ node_types:
         type: alien.relationships.AuroraExecutorHostedOnSlave
         lower_bound: 1
         upper_bound: 1
+        node_filter:
+          properties:
+            - component_version: { equal: 0.25.0-0.2.70 }
+
     interfaces:
       Standard:
         create:
