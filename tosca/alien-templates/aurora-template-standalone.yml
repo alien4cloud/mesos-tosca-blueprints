@@ -1,8 +1,8 @@
 tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
-description: Template for a scalable Mesos cluster in HA mode
-template_name: mesos-ha-scalable
-template_version: 1.0.0-SNAPSHOT
-template_author: Fastconnect
+description: Alien4Cloud generated service template
+template_name: Aurora
+template_version: 0.1.0-SNAPSHOT
+template_author: admin
 
 imports:
   - tosca-normative-types:1.0.0-SNAPSHOT
@@ -10,9 +10,15 @@ imports:
 
 topology_template:
   node_templates:
-    Master_Compute:
+    Slave_Compute:
       type: tosca.nodes.Compute
       capabilities:
+        endpoint:
+          properties:
+            protocol: tcp
+            initiator: source
+            network_name: PRIVATE
+            secure: true
         os:
           properties:
             type: linux
@@ -22,25 +28,37 @@ topology_template:
         scalable:
           properties:
             min_instances: 1
-            max_instances: 5
-            default_instances: 3
-
-    Mesos_Master:
+            max_instances: 1
+            default_instances: 1
+    MesosMaster:
       type: alien.nodes.MesosMaster
       properties:
         work_dir: /var/lib/mesos
         log_dir: /var/log/mesos
         port: 5050
         cluster_name: Mesos cluster
+        component_version: "0.25.0-0.2.70"
       requirements:
         - host:
             node: Master_Compute
             capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
-
-    Slave_Compute:
+    AuroraScheduler:
+      type: alien.nodes.AuroraScheduler
+      requirements:
+        - host:
+            node: MesosMaster
+            capability: alien.capabilities.MesosMaster
+            relationship: alien.relationships.AuroraSchedulerHostedOnMaster
+    Master_Compute:
       type: tosca.nodes.Compute
       capabilities:
+        endpoint:
+          properties:
+            protocol: tcp
+            initiator: source
+            network_name: PRIVATE
+            secure: true
         os:
           properties:
             type: linux
@@ -50,26 +68,27 @@ topology_template:
         scalable:
           properties:
             min_instances: 1
-            max_instances: 100
-            default_instances: 2
-    Mesos_Slave:
+            max_instances: 1
+            default_instances: 1
+    AuroraExecutor:
+      type: alien.nodes.AuroraExecutor
+      requirements:
+        - host:
+            node: MesosSlave
+            capability: alien.capabilities.MesosSlave
+            relationship: alien.relationships.AuroraExecutorHostedOnSlave
+    MesosSlave:
       type: alien.nodes.MesosSlave
       properties:
         log_dir: /var/log/mesos
         port: 5051
+        component_version: "0.25.0-0.2.70"
       requirements:
         - host:
             node: Slave_Compute
             capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
         - master:
-            node: Mesos_Master
+            node: MesosMaster
             capability: alien.capabilities.MesosMaster
             relationship: alien.relationships.MesosSlaveConnectsToMaster
-  outputs:
-    masters_ip:
-      description: The masters' IPs.
-      value: { get_attribute: [MesosMaster, external_url] }
-    zk_url:
-      description: The Zookeeper endpoint URL.
-      value: { get_attribute: [MesosMaster, master_url] }
