@@ -4,13 +4,13 @@
 sudo cp ${zoo_config} /etc/zookeeper/conf/zoo.cfg
 
 # Put together the zk url and the zoo.cfg file
-zkURL="zk://"
+zk_endpoints=""
 i=1 # counter
 IFS=',' # separator
 for inst in $INSTANCES
 do
     zkHost="${inst}_MESOS_IP"
-    zkURL="$zkURL${!zkHost}:2181,"
+    zk_endpoints="${zk_endpoints}${!zkHost}:2181,"
 
     # Assign each node an unique zookeeper id
     [ $inst == $INSTANCE ] && (echo $i | sudo tee /var/lib/zookeeper/myid >/dev/null)
@@ -18,11 +18,11 @@ do
 
     i=$((i+1))
 done
-zkURL="${zkURL%?}/mesos"
+zk_endpoints="${zk_endpoints%?}" # Remove last comma
+zkURL="zk://${zk_endpoints}/mesos"
 
 # Quorum for replicated log must be a majority of masters
 quorum=$((1 + $(echo $INSTANCES | tr "," " " | wc -w)/2))
-echo
 
 # Prepare a sh script, which will be sourced before starting mesos and will export environment variables defining the cluster
 mkdir -p ~/mesos_install
@@ -36,5 +36,6 @@ done < <(env | grep "^MESOS_")
 echo "export MESOS_ZK=\"${zkURL}\"" >> ~/mesos_install/mesos_env.sh
 echo "export MESOS_QUORUM=\"${quorum}\"" >> ~/mesos_install/mesos_env.sh
 
-# Export ZK url as operation output - this will be passed to the slaves through the MesosSlaveConnectsToMasterRelationShip
-export master_url="${zkURL}" # TODO: for some reason commas are replaced by whitespaces during the export
+# Export zk_endpoints as operation output - this will be passed to the slaves through the MesosSlaveConnectsToMasterRelationShip
+# TODO: for some reason commas are replaced by whitespaces during the export
+export zk_endpoints="${zk_endpoints}"

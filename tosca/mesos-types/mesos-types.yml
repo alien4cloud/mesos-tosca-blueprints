@@ -47,7 +47,8 @@ node_types:
         type: tosca.artifacts.File
     attributes:
       external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
-      master_url: { get_operation_output: [SELF, Standard, configure, master_url] }
+      master_url: { concat: ["zk://", get_operation_output: [SELF, Standard, configure, zk_endpoints], "/mesos"] }
+      zk_endpoints: { get_operation_output: [SELF, Standard, configure, zk_endpoints] }
     capabilities:
       master: alien.capabilities.MesosMaster
     requirements:
@@ -176,6 +177,11 @@ node_types:
       Aurora Scheduler
     tags:
       icon: images/aurora_icon.png
+    properties:
+      cluster_name:
+        type: string
+        required: true
+        default: devcluster
     requirements:
       - host: alien.capabilities.MesosMaster
         type: alien.relationships.AuroraSchedulerHostedOnMaster
@@ -191,6 +197,12 @@ node_types:
           inputs:
             OS: { get_property: [HOST, os, distribution] }
           implementation: scripts/aurora/install_scheduler.sh
+        configure:
+          inputs:
+            AURORA_ZK_ENDPOINTS: { get_attribute: [HOST, zk_endpoints] }
+            AURORA_MESOS_MASTER: { get_attribute: [HOST, master_url] }
+            AURORA_CLUSTER_NAME: { get_property: [SELF, cluster_name] }
+          implementation: scripts/aurora/configure_scheduler.sh
         start:
           inputs:
             OS: { get_property: [HOST, os, distribution] }
