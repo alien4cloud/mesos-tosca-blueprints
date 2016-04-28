@@ -124,6 +124,10 @@ node_types:
         constraints:
           - valid_values: [ "posix/cpu,posix/mem", "cgroups/cpu,cgroups/mem" ]
           # Todo extend to more values
+      work_dir:
+        type: string
+        required: false
+        default: "/var/lib/mesos"
       containerizers:
         type: string
         required: false
@@ -147,6 +151,7 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
+            MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
           implementation: scripts/slave/configure.sh
         start:
           implementation: scripts/slave/start.sh
@@ -233,6 +238,10 @@ node_types:
           inputs:
             OS: { get_property: [HOST, os, distribution] }
           implementation: scripts/aurora/install_executor.sh
+        configure:
+          inputs:
+            MESOS_WORK_DIR: { get_property: [HOST, work_dir] }
+          implementation: scripts/aurora/configure_executor.sh
 
 capability_types:
   alien.capabilities.MesosMaster:
