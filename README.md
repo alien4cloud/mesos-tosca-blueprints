@@ -2,19 +2,19 @@
 
 ## Description
 
-This project aims at providing a simple, plug-and-play TOSCA definition of a Mesos-Aurora cluster. 
+This project aims at providing a simple, plug-and-play TOSCA definition of a Mesos-Aurora cluster.  
 It is shipped with ready-to-use templates that you can upload into Alien4Cloud. Just adjust the number of Slaves and Masters that fits your needs using the **Scalable** capability of the hosting computes and hit deploy.
 
 ## Components
 
 As Mesos and Aurora are both made of a master and a slave components, so does this topology. Therefore, we defined 4 nodes types :
 
-- alien.nodes.MesosMaster : A Mesos Master component. This is the core of the cluster. It is in charge of managing the slaves' resources and sends offers to the registered frameworks.
+- MesosMaster : A Mesos Master component. This is the core of the cluster. It is in charge of managing the slaves' resources and sends offers to the registered frameworks.
 It can be scaled up to 3 or 5 nodes to work in [High-Availability mode](http://mesos.apache.org/documentation/latest/high-availability/) using **Zookeeper**.
-- alien.nodes.MesosSlave : A Mesos Slave component. Those are the cluster's workers. A MesosSlave node will report back resources to the Master and run containerized tasks. It can be scaled up to thousands of nodes.
-- alien.nodes.AuroraScheduler : The Aurora Master component. It is a Masos framework and as such, it is offered resources and can run tasks on the slaves. Provided a Job, the scheduler will insure
-that it is always up and will gracefully handle failures. It is installed on the same compute of the Mesos Master - a behavior we implemented using a _HostedOn_ TOSCA relationship - and is scaled up using Zookeeper identically.
-- alien.nodes.AuroraExecutor : The Aurora Worker component. It is Aurora's own custom Executor (See [Mesos Framework Development Guide](http://mesos.apache.org/documentation/latest/app-framework-development-guide/) for more info).
+- MesosSlave : A Mesos Slave component. Those are the cluster's workers. A MesosSlave node will report back resources to the Master and run containerized tasks. It can be scaled up to thousands of nodes.
+- AuroraScheduler : The Aurora Master component. It is a Masos framework and as such, it is offered resources and can run tasks on the slaves. Provided a Job, the scheduler will insure
+that it is always up and will gracefully handle failures. It is installed on the same compute as the Mesos Master - a behavior we implemented using a _HostedOn_ TOSCA relationship - and is scaled up using Zookeeper identically.
+- AuroraExecutor : The Aurora Worker component. It is Aurora's own custom Executor (See [Mesos Framework Development Guide](http://mesos.apache.org/documentation/latest/app-framework-development-guide/) for more info).
 Jobs' tasks are run within this component.
 
 ## Requirements
@@ -41,4 +41,3 @@ To prevent misuse, we used node-filters on the Mesos version.
 - Provided templates are for testing purposes and may not be fitted for production.
 - You can access Aurora & Mesos UI using the Mesos Master Attribute _external_url_.
 - About the *scripts* directory : this contains scripts designed at an early stage to install a Mesos cluster. They are kept here for reference but should be removed from this repository in the future.
-
