@@ -13,4 +13,10 @@ done < <(env | grep '^AURORA_' | sed 's/AURORA_//')
 
 # Calculate quorum
 quorum=$((1 + $(echo $INSTANCES | tr "," " " | wc -w)/2))
-sudo sed -i.bak "s/^QUORUM_SIZE=[0-9]*/QUORUM_SIZE=${quorum}/" /etc/default/aurora-scheduler
+sudo sed -i.bak "s/^\(QUORUM_SIZE=\)[0-9]*$/\1${quorum}/" /etc/default/aurora-scheduler
+
+# Use the known compute hostname to advertise in ZooKeeper instead of the locally-resolved hostname.
+sudo sed -i.bak "s/^\(EXTRA_SCHEDULER_ARGS=\).*$/\1\"-hostname=\\\\\"${HOSTNAME}\\\\\"\"/" /etc/default/aurora-scheduler
+
+# Remove backup file
+sudo rm -f /etc/default/aurora-scheduler.bak

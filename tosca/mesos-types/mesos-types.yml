@@ -209,6 +209,7 @@ node_types:
             AURORA_ZK_ENDPOINTS: { get_attribute: [HOST, zk_endpoints] }
             AURORA_MESOS_MASTER: { get_attribute: [HOST, master_url] }
             AURORA_CLUSTER_NAME: { get_property: [SELF, cluster_name] }
+            HOSTNAME: { get_attribute: [HOST, public_ip_address] }
           implementation: scripts/aurora/configure_scheduler.sh
         start:
           inputs:
