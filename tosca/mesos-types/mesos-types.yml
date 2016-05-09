@@ -187,6 +187,8 @@ node_types:
         type: string
         required: true
         default: devcluster
+    attributes:
+      external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8081/scheduler"] }
     requirements:
       - host: alien.capabilities.MesosMaster
         type: alien.relationships.AuroraSchedulerHostedOnMaster
