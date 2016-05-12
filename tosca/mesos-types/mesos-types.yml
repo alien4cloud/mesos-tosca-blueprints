@@ -6,6 +6,7 @@ template_author: FastConnect
 
 imports:
   - "tosca-normative-types:1.0.0-SNAPSHOT"
+  - "docker-types:0.0.1-SNAPSHOT"
 
 node_types:
   alien.nodes.MesosMaster:
@@ -128,13 +129,6 @@ node_types:
         type: string
         required: false
         default: "/var/lib/mesos"
-      containerizers:
-        type: string
-        required: false
-        description: >
-          Comma-separated list of containerizer implementations to compose in order to provide containerization.
-          Available options are mesos, external, and docker (on Linux).
-          The order the containerizers are specified is the order they are tried. (default: mesos)
     interfaces:
       Standard:
         create:
@@ -149,7 +143,6 @@ node_types:
             MESOS_IP: { get_attribute: [HOST, ip_address] }
             MESOS_PORT: { get_property: [SELF, port] }
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
-            MESOS_CONTAINERIZERS: { get_property: [SELF, containerizers] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
           implementation: scripts/slave/configure.sh
@@ -174,6 +167,10 @@ node_types:
       - master: alien.capabilities.MesosMaster
         type: alien.relationships.MesosSlaveConnectsToMaster
         lower_bound: 1
+        upper_bound: 1
+      - docker_host: alien.capabilities.DockerHost
+        type: alien.relationships.MesosSlaveDependsOnDocker
+        lower_bound: 0
         upper_bound: 1
 
   alien.nodes.AuroraScheduler:
@@ -274,6 +271,11 @@ relationship_types:
           inputs:
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
           implementation: scripts/slave/configure_connectsToMaster.sh
-
-
-
+  alien.relationships.MesosSlaveDependsOnDocker:
+      derived_from: tosca.relationships.DependsOn
+      description: Relationship used to bind a Mesos slave to a Docker engine
+      valid_sources: [ alien.nodes.MesosSlave ]
+      valid_target: [ alien.capabilities.DockerHost ]
+      interfaces:
+          Configure:
+              post_configure_source: scripts/slave/configure_dependsOnDocker.sh
