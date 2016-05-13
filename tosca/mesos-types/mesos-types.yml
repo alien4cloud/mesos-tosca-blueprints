@@ -194,6 +194,8 @@ node_types:
         node_filter:
           properties:
             - component_version: { equal: 0.25.0-0.2.70 }
+      # TODO: requirement 0-1 vers un ensemble ZOOKEEPER
+      # & config -thermos_executor_flags="--announcer-ensemble localhost:2181 --announcer-zookeeper-auth-config /home/vagrant/aurora/examples/vagrant/config/announcer-auth.json"
 
     interfaces:
       Standard:
