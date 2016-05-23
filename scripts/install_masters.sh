@@ -76,7 +76,7 @@ do {
 			# clean
 			rm -rf ~/tmp/
 			exit 0
-		ENDSSH
+ENDSSH
 
 		if [ $? -eq 0 ]
 		then
