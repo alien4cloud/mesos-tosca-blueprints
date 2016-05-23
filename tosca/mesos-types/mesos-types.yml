@@ -219,6 +219,33 @@ node_types:
             OS: { get_property: [HOST, os, distribution] }
           implementation: scripts/aurora/stop_scheduler.sh
 
+  alien.nodes.Marathon:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      Marathon scheduler. NB: This component requires Oracle's Java 8. The Oracle licence is therefore implicitly accepted. The licence can be found here: http://www.oracle.com/technetwork/java/javase/downloads/thirdpartylicensereadme-java8-2168078.txt.
+    tags:
+      icon: images/marathon_icon.png
+    attributes:
+      external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8080/ui"] }
+    requirements:
+      - host: alien.capabilities.MesosMaster
+        type: alien.relationships.MarathonHostedOnMaster
+        lower_bound: 1
+        upper_bound: 1
+    interfaces:
+      Standard:
+        create:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/marathon/install.sh
+        start:
+          inputs:
+            MARATHON_MASTER: { get_attribute: [HOST, master_url] }
+            MARATHON_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
+            MARATHON_ZK: { concat: [ "zk://", get_attribute: [HOST, zk_endpoints], "/marathon" ] }
+          implementation: scripts/marathon/start.sh
+        stop: scripts/marathon/stop.sh
+
   alien.nodes.AuroraExecutor:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
@@ -233,7 +260,6 @@ node_types:
         node_filter:
           properties:
             - component_version: { equal: 0.25.0-0.2.70 }
-
     interfaces:
       Standard:
         create:
@@ -252,6 +278,11 @@ capability_types:
     derived_from: tosca.capabilities.Root
 
 relationship_types:
+  alien.relationships.MarathonHostedOnMaster:
+    derived_from: tosca.relationships.HostedOn
+    description: Relationship used to bind the Marathon scheduler to a Mesos Master
+    valid_sources: [ alien.nodes.Marathon ]
+    valid_targets: [ alien.capabilities.MesosMaster ]
   alien.relationships.AuroraSchedulerHostedOnMaster:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind the Aurora scheduler to a Mesos Master
@@ -277,7 +308,7 @@ relationship_types:
       derived_from: tosca.relationships.DependsOn
       description: Relationship used to bind a Mesos slave to a Docker engine
       valid_sources: [ alien.nodes.MesosSlave ]
-      valid_target: [ alien.capabilities.DockerHost ]
+      valid_targets: [ alien.capabilities.DockerHost ]
       interfaces:
           Configure:
-              post_configure_source: scripts/slave/configure_dependsOnDocker.sh
+            post_configure_source: scripts/slave/configure_dependsOnDocker.sh
