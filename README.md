@@ -36,6 +36,7 @@ We recommend the latter.
 
 - As for now, the ASF only provides binaries for Aurora 0.12, which relies on Mesos 0.25.0 and may not work on other versions of Mesos. 
 To prevent misuse, we used node-filters on the Mesos version.
+- To use Docker images in Aurora jobs, libmesos prerequisites must be installed inside the Docker container.
 - Scheduler authentication and replicated log persistence (using EBS or a similar service) are yet to be implemented.
 - The MesosSlave's _containerizers_ property allows Docker support, but this requires installing the Docker daemon on each slave. See this [script](scripts/docker_install.sh) for a simple installation for Centos.
 - A proxy system is yet to be implemented in order to resolve the leading master's URL using Zookeeper.
