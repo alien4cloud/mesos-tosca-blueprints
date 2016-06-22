@@ -6,7 +6,7 @@ template_author: FastConnect
 
 imports:
   - "tosca-normative-types:1.0.0-SNAPSHOT"
-  - "docker-types:0.0.1-SNAPSHOT"
+  - "docker-engine:0.0.1-SNAPSHOT"
 
 node_types:
   alien.nodes.MesosMaster:
