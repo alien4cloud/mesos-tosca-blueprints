@@ -1,0 +1,10 @@
+{
+  "zk": "{{mesos_zk}}",
+  "refreshSeconds": 60,
+  "ttl": 60,
+  "domain": "mesos",
+  "port": 53,
+  "resolvers": [{{resolvers}}],
+  "timeout": 5,
+  "IPSources": ["mesos", "host","docker"]
+}

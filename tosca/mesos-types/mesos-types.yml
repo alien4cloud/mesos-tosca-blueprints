@@ -129,6 +129,9 @@ node_types:
         type: string
         required: false
         default: "/var/lib/mesos"
+    artifacts:
+      - dns_config: artifacts/mesos-dns-config.json
+        type: tosca.artifacts.File
     interfaces:
       Standard:
         create:
