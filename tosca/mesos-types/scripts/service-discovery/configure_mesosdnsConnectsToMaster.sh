@@ -1,3 +1,4 @@
+#!/bin/bash -e
 # Configure mesos-dns
 source ~/mesos_install/mesos_env.sh
 sudo sed -i "s;{{mesos_zk}};${MESOS_MASTER};" /usr/local/mesos-dns/config.json
