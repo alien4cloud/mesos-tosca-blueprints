@@ -1,0 +1,13 @@
+{
+  "id": "mesos-dns",
+  "cmd": "sudo /usr/local/mesos-dns/mesos-dns -config=/usr/local/mesos-dns/config.json",
+  "cpus": {{cpu}},
+  "mem": {{mem}},
+  "instances": 1,
+  "constraints": [["hostname", "CLUSTER", "{{slave_ip}}"] ],
+  "requirePorts": true,
+  "ports": [
+    53,
+    8123
+  ]
+}

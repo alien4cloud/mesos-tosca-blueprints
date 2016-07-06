@@ -1,4 +1,4 @@
-tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
+tosca_definitions_version: alien_dsl_1_2_0
 description: TOSCA Apache Mesos & Aurora profile
 template_name: mesos-types
 template_version: 1.2.0-SNAPSHOT
@@ -55,8 +55,7 @@ node_types:
     requirements:
       - host: tosca.nodes.Compute
         type: tosca.relationships.HostedOn
-        lower_bound: 1
-        upper_bound: 1
+        occurrences: [1, 1]
         node_filter:
           capabilities:
             - tosca.capabilities.OperatingSystem:
@@ -94,6 +93,11 @@ node_types:
     tags:
       icon: /images/mesos_icon.png
     properties:
+      service_discovery:
+        type: boolean
+        required: true
+        default: true
+        description: Set up a service discovery mechanism using Mesos-DNS and Marathon-LB.
       firewall_rules:
         type: string
         required: false
@@ -129,9 +133,6 @@ node_types:
         type: string
         required: false
         default: "/var/lib/mesos"
-    artifacts:
-      - dns_config: artifacts/mesos-dns-config.json
-        type: tosca.artifacts.File
     interfaces:
       Standard:
         create:
@@ -158,8 +159,7 @@ node_types:
     requirements:
       - host: tosca.nodes.Compute
         type: tosca.relationships.HostedOn
-        lower_bound: 1
-        upper_bound: 1
+        occurrences: [1, 1]
         node_filter:
           capabilities:
             - tosca.capabilities.OperatingSystem:
@@ -169,12 +169,13 @@ node_types:
                   - distribution: { valid_values: [ debian, rhel, ubuntu, centos ] }
       - master: alien.capabilities.MesosMaster
         type: alien.relationships.MesosSlaveConnectsToMaster
-        lower_bound: 1
-        upper_bound: 1
+        occurrences: [1, 1]
       - docker_host: alien.capabilities.DockerHost
         type: alien.relationships.MesosSlaveDependsOnDocker
-        lower_bound: 0
-        upper_bound: 1
+        occurrences: [0, 1]
+      - dns_server: alien.capabilities.MesosDNS
+        type: alien.relationships.MesosSlaveConnectsToDNS
+        occurrences: [0, unbounded]
 
   alien.nodes.AuroraScheduler:
     derived_from: tosca.nodes.SoftwareComponent
@@ -192,8 +193,7 @@ node_types:
     requirements:
       - host: alien.capabilities.MesosMaster
         type: alien.relationships.AuroraSchedulerHostedOnMaster
-        lower_bound: 1
-        upper_bound: 1
+        occurrences: [1, 1]
         node_filter:
           properties:
             - component_version: { equal: 0.25.0-0.2.70 }
@@ -230,11 +230,13 @@ node_types:
       icon: images/marathon_icon.png
     attributes:
       external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8080/ui"] }
+      api_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":8080/v2"] }
+    capabilities:
+      marathon_master: alien.capabilities.MarathonMaster
     requirements:
       - host: alien.capabilities.MesosMaster
         type: alien.relationships.MarathonHostedOnMaster
-        lower_bound: 1
-        upper_bound: 1
+        occurrences: [1, 1]
     interfaces:
       Standard:
         create:
@@ -258,8 +260,7 @@ node_types:
     requirements:
       - host: alien.capabilities.MesosSlave
         type: alien.relationships.AuroraExecutorHostedOnSlave
-        lower_bound: 1
-        upper_bound: 1
+        occurrences: [1, 1]
         node_filter:
           properties:
             - component_version: { equal: 0.25.0-0.2.70 }
@@ -274,44 +275,141 @@ node_types:
             MESOS_WORK_DIR: { get_property: [HOST, work_dir] }
           implementation: scripts/aurora/configure_executor.sh
 
+  alien.nodes.MesosDNS:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: DNS service for Mesos clusters.
+    properties:
+      cpu_alloc:
+        type: float
+        required: true
+        default: 1.0
+      mem_alloc:
+        type: integer
+        required: true
+        default: 512
+    capabilities:
+      dns_server: alien.capabilities.MesosDNS
+    requirements:
+      - host: alien.capabilities.MesosSlave
+        type: alien.relationships.AppHostedOnSlave
+        occurrences: [1, 1]
+      - marathon: alien.capabilities.MarathonMaster
+        type: alien.relationships.MesosDNSConnectsToMaster
+        occurrences: [1, 1]
+    artifacts:
+      - dns_config: artifacts/mesos-dns-config.json
+        type: tosca.artifacts.File
+      - marathon_template: artifacts/mesos-dns-template.json
+        type: tosca.artifacts.File
+    interfaces:
+      Standard:
+        create: scripts/service-discovery/install-mesosdns.sh
+        configure:
+          inputs:
+            SLAVE_IP: { get_attribute: [HOST, public_ip_address] }
+            CPU_ALLOC: { get_property: [SELF, cpu_alloc] }
+            MEM_ALLOC: { get_property: [SELF, mem_alloc] }
+          implementation: scripts/service-discovery/configure-mesosdns.sh
+        start: scripts/service-discovery/start-mesosdns.sh
+
+  alien.nodes.MarathonLB:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: Marathon load-balancer for Mesos clusters.
+    properties:
+      cpu_alloc:
+        type: float
+        required: true
+        default: 1.0
+      mem_alloc:
+        type: integer
+        required: true
+        default: 512
+    requirements:
+      - host: alien.capabilities.MesosSlave
+        type: alien.relationships.AppHostedOnSlave
+        occurrences: [1, 1]
+      - marathon: alien.capabilities.MarathonMaster
+        type: alien.relationships.MarathonLBConnectsToMaster
+        occurrences: [1, 1]
+    artifacts:
+      - marathon_template: artifacts/marathon-lb-template.json
+        type: tosca.artifacts.File
+    interfaces:
+      Standard:
+        configure:
+          inputs:
+            CPU_ALLOC: { get_property: [SELF, cpu_alloc] }
+            MEM_ALLOC: { get_property: [SELF, mem_alloc] }
+          implementation: scripts/service-discovery/configure-marathonlb.sh
+        start: scripts/service-discovery/start-marathonlb.sh
+
 capability_types:
   alien.capabilities.MesosMaster:
     derived_from: tosca.capabilities.Root
   alien.capabilities.MesosSlave:
+    derived_from: tosca.capabilities.Root
+  alien.capabilities.MarathonMaster:
+    derived_from: tosca.capabilities.Root
+  alien.capabilities.MesosDNS:
     derived_from: tosca.capabilities.Root
 
 relationship_types:
   alien.relationships.MarathonHostedOnMaster:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind the Marathon scheduler to a Mesos Master
-    valid_sources: [ alien.nodes.Marathon ]
-    valid_targets: [ alien.capabilities.MesosMaster ]
+    valid_target_types: [ alien.nodes.MesosMaster ]
   alien.relationships.AuroraSchedulerHostedOnMaster:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind the Aurora scheduler to a Mesos Master
-    valid_sources: [ alien.nodes.AuroraScheduler ]
-    valid_targets: [ alien.capabilities.MesosMaster ]
+    valid_target_types: [ alien.nodes.MesosMaster ]
   alien.relationships.AuroraExecutorHostedOnSlave:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind Thermos, the Aurora executor, to a mesos worker
-    valid_sources: [ alien.nodes.AuroraExecutor ]
-    valid_targets: [ alien.nodes.MesosSlave ]
+    valid_target_types: [ alien.nodes.MesosSlave ]
+  alien.relationships.AppHostedOnSlave:
+    derived_from: tosca.relationships.HostedOn
+    valid_target_types: [ alien.nodes.MesosSlave ]
   alien.relationships.MesosSlaveConnectsToMaster:
     derived_from: tosca.relationships.ConnectsTo
     description: Relationship used to bind a slave to a master
-    valid_sources: [ alien.nodes.MesosSlaves ]
-    valid_targets: [ alien.capabilities.MesosMaster ]
+    valid_target_types: [ alien.nodes.MesosMaster ]
     interfaces:
       Configure:
         post_configure_source:
           inputs:
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
           implementation: scripts/slave/configure_connectsToMaster.sh
+  alien.relationships.MesosDNSConnectsToMaster:
+    derived_from: tosca.relationships.ConnectsTo
+    valid_target_types: [ alien.nodes.Marathon ]
+    interfaces:
+      Configure:
+        post_configure_source:
+          inputs:
+            MARATHON_API: { get_attribute: [TARGET, api_url] }
+          implementation: scripts/service-discovery/configure_mesosdnsConnectsToMaster.sh
+  alien.relationships.MarathonLBConnectsToMaster:
+    derived_from: tosca.relationships.ConnectsTo
+    valid_target_types: [ alien.nodes.Marathon ]
+    interfaces:
+      Configure:
+        post_configure_source:
+          inputs:
+            MARATHON_API: { get_attribute: [TARGET, api_url] }
+          implementation: scripts/service-discovery/configure_marathonlbConnectsToMarathon.sh
+  alien.relationships.MesosSlaveConnectsToDNS:
+    derived_from: tosca.relationships.ConnectsTo
+    valid_target_types: [ alien.nodes.MesosDNS ]
+    interfaces:
+      Configure:
+        post_configure_source:
+          inputs:
+            DNS_IP: { get_attribute: [TARGET, ip_address] }
+          implementation: scripts/slave/configure_connectsToDNS.sh
   alien.relationships.MesosSlaveDependsOnDocker:
       derived_from: tosca.relationships.DependsOn
+      valid_target_types: [ alien.nodes.DockerEngine ]
       description: Relationship used to bind a Mesos slave to a Docker engine
-      valid_sources: [ alien.nodes.MesosSlave ]
-      valid_targets: [ alien.capabilities.DockerHost ]
       interfaces:
           Configure:
             post_configure_source: scripts/slave/configure_dependsOnDocker.sh

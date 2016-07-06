@@ -80,3 +80,57 @@ topology_template:
             node: docker_engine
             capability: alien.capabilities.DockerHost
             relationship: alien.relationships.MesosSlaveDependsOnDocker
+        - dns_server: mesosDNS
+
+    slave_SD_compute:
+      type: tosca.nodes.Compute
+      capabilities:
+        endpoint:
+          properties:
+            protocol: tcp
+            initiator: source
+            network_name: PRIVATE
+            secure: true
+        os:
+          properties:
+            type: linux
+            distribution: ubuntu
+            version: 14.04
+            architecture: x86_64
+        scalable:
+          properties:
+            min_instances: 1
+            max_instances: 5
+            default_instances: 1
+    docker_engine_2:
+      type: alien.nodes.DockerEngine
+      requirements:
+        - host: slave_SD_compute
+    marathon_lb:
+      type: alien.nodes.MarathonLB
+      requirements:
+        - host: slave_SD_compute
+        - marathon:
+            node: marathon
+            capability: alien.capabilities.MarathonMaster
+            relationship: alien.relationships.MarathonLBConnectsToMaster
+    mesosDNS:
+      type: alien.nodes.MesosDNS
+      requirements:
+        - host: slave_SD_compute
+        - marathon:
+            node: marathon
+            capability: alien.capabilities.MarathonMaster
+            relationship: alien.relationships.MesosDNSConnectsToMaster
+    mesos_slave_2:
+      type: alien.nodes.MesosSlave
+      requirements:
+        - host: slave_SD_compute
+        - master:
+            node: mesos_master
+            capability: alien.capabilities.MesosMaster
+            relationship: alien.relationships.MesosSlaveConnectsToMaster
+        - docker_host:
+            node: docker_engine_2
+            capability: alien.capabilities.DockerHost
+            relationship: alien.relationships.MesosSlaveDependsOnDocker

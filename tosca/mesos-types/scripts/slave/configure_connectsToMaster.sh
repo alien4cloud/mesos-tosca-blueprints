@@ -7,8 +7,3 @@ if [ -n "${MESOS_MASTER}" ]; then
 else
     >&2 echo "Failed to configure slave : Master URL is mandatory." && exit 1
 fi
-
-# Configure mesos-dns
-sudo sed -i "s;{{mesos_zk}};${MESOS_MASTER};" /usr/local/mesos-dns/config.json
-
-# TODO: update /etc/resolv.conf avec l'ip du slave choisi pour être DNS
