@@ -306,6 +306,7 @@ node_types:
         create: scripts/service-discovery/install-mesosdns.sh
         configure:
           inputs:
+            SLAVE_LOCAL_IP: { get_attribute: [HOST, ip_address] }
             SLAVE_IP: { get_attribute: [HOST, public_ip_address] }
             CPU_ALLOC: { get_property: [SELF, cpu_alloc] }
             MEM_ALLOC: { get_property: [SELF, mem_alloc] }
