@@ -185,3 +185,10 @@ topology_template:
           properties:
             num_cpus: 2
             mem_size: 4096 MB
+  outputs:
+    mesos_masters:
+      description: The masters' URLs.
+      value: { get_attribute: [mesos_master, external_url] }
+    marathon:
+      description: Marathon's URL.
+      value: { get_attribute: [marathon, external_url]}
