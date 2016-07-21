@@ -1,10 +1,10 @@
 {
-  "id": "mesos-dns",
+  "id": "{{app_id}}",
   "cmd": "sudo /usr/local/mesos-dns/mesos-dns -config=/usr/local/mesos-dns/config.json",
   "cpus": {{cpu}},
   "mem": {{mem}},
-  "instances": 1,
-  "constraints": [["hostname", "CLUSTER", "{{slave_ip}}"] ],
+  "instances": {{nb_inst}},
+  "constraints": [["hostname", "LIKE", "{{slaves_regx}}"], ["hostname", "UNIQUE"] ],
   "requirePorts": true,
   "ports": [
     53,

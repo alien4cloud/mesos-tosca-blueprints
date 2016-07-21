@@ -17,6 +17,26 @@ sudo resolvconf -u
 
 # Configure marathon application file
 sudo cp ${marathon_template} /usr/local/mesos-dns/app_definition.json
-sudo sed -i "s/{{slave_ip}}/${SLAVE_IP}/" /usr/local/mesos-dns/app_definition.json
+
+# Set appID - in lower case - to the node's name. Replace underscores with dashes.
+appID=$(echo ${NODE} | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+sudo sed -i "s/{{app_id}}/${appID}/" /usr/local/mesos-dns/app_definition.json
+
+# Constraint the application to the given slaves.
+slaves_regx=""
+IFS=","
+for inst in $INSTANCES
+do
+  var_name="${inst}_SLAVE_IP"
+  slaves_regx="${slaves_regx}${!var_name}|"
+done
+slaves_regx="${slaves_regx%?}" # Remove last pipe
+sudo sed -i "s/{{slaves_regx}}/${slaves_regx}/" /usr/local/mesos-dns/app_definition.json
+
+# Nb instances
+nb_inst=$(echo $INSTANCES | tr "," " " | wc -w)
+sudo sed -i "s/{{nb_inst}}/${nb_inst}/" /usr/local/mesos-dns/app_definition.json
+
+# Resource reservation
 sudo sed -i "s/{{cpu}}/${CPU_ALLOC}/" /usr/local/mesos-dns/app_definition.json
 sudo sed -i "s/{{mem}}/${MEM_ALLOC}/" /usr/local/mesos-dns/app_definition.json

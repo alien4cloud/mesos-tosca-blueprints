@@ -400,7 +400,7 @@ relationship_types:
     valid_target_types: [ alien.nodes.MesosDNS ]
     interfaces:
       Configure:
-        post_configure_source:
+        add_target:
           inputs:
             DNS_IP: { get_attribute: [TARGET, ip_address] }
           implementation: scripts/slave/configure_connectsToDNS.sh
