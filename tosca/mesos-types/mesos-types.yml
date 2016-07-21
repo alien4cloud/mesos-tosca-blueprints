@@ -317,6 +317,10 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     description: Marathon load-balancer for Mesos clusters.
     properties:
+      instances:
+        type: integer
+        required: true
+        default: 1
       cpu_alloc:
         type: float
         required: true
@@ -326,11 +330,8 @@ node_types:
         required: true
         default: 512
     requirements:
-      - host: alien.capabilities.MesosSlave
-        type: alien.relationships.AppHostedOnSlave
-        occurrences: [1, 1]
-      - marathon: alien.capabilities.MarathonMaster
-        type: alien.relationships.MarathonLBConnectsToMaster
+      - host: alien.capabilities.MarathonMaster
+        type: alien.relationships.AppHostedOnMarathon
         occurrences: [1, 1]
     artifacts:
       - marathon_template: artifacts/marathon-lb-template.json
@@ -339,8 +340,10 @@ node_types:
       Standard:
         configure:
           inputs:
+            NB_INST: { get_property: [SELF, instances] }
             CPU_ALLOC: { get_property: [SELF, cpu_alloc] }
             MEM_ALLOC: { get_property: [SELF, mem_alloc] }
+            MARATHON_API: { get_attribute: [HOST, api_url] }
           implementation: scripts/service-discovery/configure-marathonlb.sh
         start: scripts/service-discovery/start-marathonlb.sh
 
@@ -389,15 +392,9 @@ relationship_types:
           inputs:
             MARATHON_API: { get_attribute: [TARGET, api_url] }
           implementation: scripts/service-discovery/configure_mesosdnsConnectsToMaster.sh
-  alien.relationships.MarathonLBConnectsToMaster:
-    derived_from: tosca.relationships.ConnectsTo
+  alien.relationships.AppHostedOnMarathon:
+    derived_from: tosca.relationships.HostedOn
     valid_target_types: [ alien.nodes.Marathon ]
-    interfaces:
-      Configure:
-        post_configure_source:
-          inputs:
-            MARATHON_API: { get_attribute: [TARGET, api_url] }
-          implementation: scripts/service-discovery/configure_marathonlbConnectsToMarathon.sh
   alien.relationships.MesosSlaveConnectsToDNS:
     derived_from: tosca.relationships.ConnectsTo
     valid_target_types: [ alien.nodes.MesosDNS ]

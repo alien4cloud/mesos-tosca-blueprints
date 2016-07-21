@@ -98,14 +98,10 @@ topology_template:
         cpu_alloc: 1.0
         mem_alloc: 512
       requirements:
-        - marathon:
+        - host:
             node: marathon
             capability: alien.capabilities.MarathonMaster
-            relationship: alien.relationships.MarathonLBConnectsToMaster
-        - host:
-            node: mesos_slave_2
-            capability: alien.capabilities.MesosSlave
-            relationship: alien.relationships.AppHostedOnSlave
+            relationship: alien.relationships.AppHostedOnMarathon
     mesos_slave:
       type: alien.nodes.MesosSlave
       properties:

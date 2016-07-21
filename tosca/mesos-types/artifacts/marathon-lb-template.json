@@ -1,6 +1,6 @@
 {
   "id": "marathon-lb",
-  "instances": 1,
+  "instances": {{instances}},
   "cpus": {{cpu}},
   "mem": {{mem}},
   "maintainer": "support@mesosphere.io",
