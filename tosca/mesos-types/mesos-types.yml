@@ -1,5 +1,5 @@
 tosca_definitions_version: alien_dsl_1_2_0
-description: TOSCA Apache Mesos & Aurora profile
+description: TOSCA Apache Mesos & Mesosphere Marathon profile
 template_name: mesos-types
 template_version: 1.2.0-SNAPSHOT
 template_author: FastConnect
@@ -52,6 +52,7 @@ node_types:
       zk_endpoints: { get_operation_output: [SELF, Standard, configure, zk_endpoints] }
     capabilities:
       master: alien.capabilities.MesosMaster
+      host: alien.capabilities.MesosMasterHost
     requirements:
       - host: tosca.nodes.Compute
         type: tosca.relationships.HostedOn
@@ -93,11 +94,6 @@ node_types:
     tags:
       icon: /images/mesos_icon.png
     properties:
-      service_discovery:
-        type: boolean
-        required: true
-        default: true
-        description: Set up a service discovery mechanism using Mesos-DNS and Marathon-LB.
       firewall_rules:
         type: string
         required: false
@@ -155,7 +151,7 @@ node_types:
         stop:
           implementation: scripts/slave/stop.sh
     capabilities:
-      slave: alien.capabilities.MesosSlave
+      host: alien.capabilities.MesosSlaveHost
     requirements:
       - host: tosca.nodes.Compute
         type: tosca.relationships.HostedOn
@@ -177,51 +173,6 @@ node_types:
         type: alien.relationships.MesosSlaveConnectsToDNS
         occurrences: [0, unbounded]
 
-  alien.nodes.AuroraScheduler:
-    derived_from: tosca.nodes.SoftwareComponent
-    description: >
-      Aurora Scheduler
-    tags:
-      icon: images/aurora_icon.png
-    properties:
-      cluster_name:
-        type: string
-        required: true
-        default: devcluster
-    attributes:
-      external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8081/scheduler"] }
-    requirements:
-      - host: alien.capabilities.MesosMaster
-        type: alien.relationships.AuroraSchedulerHostedOnMaster
-        occurrences: [1, 1]
-        node_filter:
-          properties:
-            - component_version: { equal: 0.25.0-0.2.70 }
-      # TODO: requirement 0-1 vers un ensemble ZOOKEEPER
-      # & config -thermos_executor_flags="--announcer-ensemble localhost:2181 --announcer-zookeeper-auth-config /home/vagrant/aurora/examples/vagrant/config/announcer-auth.json"
-
-    interfaces:
-      Standard:
-        create:
-          inputs:
-            OS: { get_property: [HOST, os, distribution] }
-          implementation: scripts/aurora/install_scheduler.sh
-        configure:
-          inputs:
-            AURORA_ZK_ENDPOINTS: { get_attribute: [HOST, zk_endpoints] }
-            AURORA_MESOS_MASTER: { get_attribute: [HOST, master_url] }
-            AURORA_CLUSTER_NAME: { get_property: [SELF, cluster_name] }
-            HOSTNAME: { get_attribute: [HOST, public_ip_address] }
-          implementation: scripts/aurora/configure_scheduler.sh
-        start:
-          inputs:
-            OS: { get_property: [HOST, os, distribution] }
-          implementation: scripts/aurora/start_scheduler.sh
-        stop:
-          inputs:
-            OS: { get_property: [HOST, os, distribution] }
-          implementation: scripts/aurora/stop_scheduler.sh
-
   alien.nodes.Marathon:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
@@ -232,10 +183,11 @@ node_types:
       external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8080/ui"] }
       api_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":8080/v2"] }
     capabilities:
-      marathon_master: alien.capabilities.MarathonMaster
+      marathon: alien.capabilities.MarathonMaster
+      host: alien.capabilities.MarathonHost
     requirements:
-      - host: alien.capabilities.MesosMaster
-        type: alien.relationships.MarathonHostedOnMaster
+      - host: alien.capabilities.MesosMasterHost
+        type: tosca.relationships.HostedOn
         occurrences: [1, 1]
     interfaces:
       Standard:
@@ -250,30 +202,6 @@ node_types:
             MARATHON_ZK: { concat: [ "zk://", get_attribute: [HOST, zk_endpoints], "/marathon" ] }
           implementation: scripts/marathon/start.sh
         stop: scripts/marathon/stop.sh
-
-  alien.nodes.AuroraExecutor:
-    derived_from: tosca.nodes.SoftwareComponent
-    description: >
-      Aurora Executor
-    tags:
-      icon: images/aurora_icon.png
-    requirements:
-      - host: alien.capabilities.MesosSlave
-        type: alien.relationships.AuroraExecutorHostedOnSlave
-        occurrences: [1, 1]
-        node_filter:
-          properties:
-            - component_version: { equal: 0.25.0-0.2.70 }
-    interfaces:
-      Standard:
-        create:
-          inputs:
-            OS: { get_property: [HOST, os, distribution] }
-          implementation: scripts/aurora/install_executor.sh
-        configure:
-          inputs:
-            MESOS_WORK_DIR: { get_property: [HOST, work_dir] }
-          implementation: scripts/aurora/configure_executor.sh
 
   alien.nodes.MesosDNS:
     derived_from: tosca.nodes.SoftwareComponent
@@ -290,8 +218,8 @@ node_types:
     capabilities:
       dns_server: alien.capabilities.MesosDNS
     requirements:
-      - host: alien.capabilities.MesosSlave
-        type: alien.relationships.AppHostedOnSlave
+      - host: alien.capabilities.MesosSlaveHost
+        type: tosca.relationships.HostedOn
         occurrences: [1, 1]
       - marathon: alien.capabilities.MarathonMaster
         type: alien.relationships.MesosDNSConnectsToMaster
@@ -330,8 +258,8 @@ node_types:
         required: true
         default: 512
     requirements:
-      - host: alien.capabilities.MarathonMaster
-        type: alien.relationships.AppHostedOnMarathon
+      - host: alien.capabilities.MarathonHost
+        type: tosca.relationships.HostedOn
         occurrences: [1, 1]
     artifacts:
       - marathon_template: artifacts/marathon-lb-template.json
@@ -348,12 +276,16 @@ node_types:
         start: scripts/service-discovery/start-marathonlb.sh
 
 capability_types:
+  alien.capabilities.MesosMasterHost:
+    derived_from: tosca.capabilities.Container
   alien.capabilities.MesosMaster:
     derived_from: tosca.capabilities.Root
-  alien.capabilities.MesosSlave:
-    derived_from: tosca.capabilities.Root
+  alien.capabilities.MesosSlaveHost:
+    derived_from: tosca.capabilities.Container
   alien.capabilities.MarathonMaster:
     derived_from: tosca.capabilities.Root
+  alien.capabilities.MarathonHost:
+    derived_from: tosca.capabilities.Container
   alien.capabilities.MesosDNS:
     derived_from: tosca.capabilities.Root
 
@@ -362,14 +294,6 @@ relationship_types:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind the Marathon scheduler to a Mesos Master
     valid_target_types: [ alien.nodes.MesosMaster ]
-  alien.relationships.AuroraSchedulerHostedOnMaster:
-    derived_from: tosca.relationships.HostedOn
-    description: Relationship used to bind the Aurora scheduler to a Mesos Master
-    valid_target_types: [ alien.nodes.MesosMaster ]
-  alien.relationships.AuroraExecutorHostedOnSlave:
-    derived_from: tosca.relationships.HostedOn
-    description: Relationship used to bind Thermos, the Aurora executor, to a mesos worker
-    valid_target_types: [ alien.nodes.MesosSlave ]
   alien.relationships.AppHostedOnSlave:
     derived_from: tosca.relationships.HostedOn
     valid_target_types: [ alien.nodes.MesosSlave ]

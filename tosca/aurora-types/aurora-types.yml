@@ -1,0 +1,89 @@
+tosca_definitions_version: alien_dsl_1_2_0
+description: TOSCA Apache Aurora profile
+template_name: aurora-types
+template_version: 0.1.0-SNAPSHOT
+template_author: FastConnect
+
+imports:
+  - "tosca-normative-types:1.0.0-SNAPSHOT"
+  - "mesos-types:1.2.0-SNAPSHOT"
+
+node_types:
+  alien.nodes.AuroraScheduler:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      Aurora Scheduler
+    tags:
+      icon: images/aurora_icon.png
+    properties:
+      cluster_name:
+        type: string
+        required: true
+        default: devcluster
+    attributes:
+      external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8081/scheduler"] }
+    requirements:
+      - host: alien.capabilities.MesosMaster
+        type: alien.relationships.AuroraSchedulerHostedOnMaster
+        occurrences: [1, 1]
+        node_filter:
+          properties:
+            - component_version: { equal: 0.25.0-0.2.70 }
+      # TODO: requirement 0-1 vers un ensemble ZOOKEEPER
+      # & config -thermos_executor_flags="--announcer-ensemble localhost:2181 --announcer-zookeeper-auth-config /home/vagrant/aurora/examples/vagrant/config/announcer-auth.json"
+
+    interfaces:
+      Standard:
+        create:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/aurora/install_scheduler.sh
+        configure:
+          inputs:
+            AURORA_ZK_ENDPOINTS: { get_attribute: [HOST, zk_endpoints] }
+            AURORA_MESOS_MASTER: { get_attribute: [HOST, master_url] }
+            AURORA_CLUSTER_NAME: { get_property: [SELF, cluster_name] }
+            HOSTNAME: { get_attribute: [HOST, public_ip_address] }
+          implementation: scripts/aurora/configure_scheduler.sh
+        start:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/aurora/start_scheduler.sh
+        stop:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/aurora/stop_scheduler.sh
+
+  alien.nodes.AuroraExecutor:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: >
+      Aurora Executor
+    tags:
+      icon: images/aurora_icon.png
+    requirements:
+      - host: alien.capabilities.MesosSlave
+        type: alien.relationships.AuroraExecutorHostedOnSlave
+        occurrences: [1, 1]
+        node_filter:
+          properties:
+            - component_version: { equal: 0.25.0-0.2.70 }
+    interfaces:
+      Standard:
+        create:
+          inputs:
+            OS: { get_property: [HOST, os, distribution] }
+          implementation: scripts/aurora/install_executor.sh
+        configure:
+          inputs:
+            MESOS_WORK_DIR: { get_property: [HOST, work_dir] }
+          implementation: scripts/aurora/configure_executor.sh
+
+relationship_types:
+  alien.relationships.AuroraSchedulerHostedOnMaster:
+    derived_from: tosca.relationships.HostedOn
+    description: Relationship used to bind the Aurora scheduler to a Mesos Master
+    valid_target_types: [ alien.nodes.MesosMaster ]
+  alien.relationships.AuroraExecutorHostedOnSlave:
+    derived_from: tosca.relationships.HostedOn
+    description: Relationship used to bind Thermos, the Aurora executor, to a mesos worker
+    valid_target_types: [ alien.nodes.MesosSlave ]
