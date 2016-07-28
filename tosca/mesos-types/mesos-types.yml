@@ -6,7 +6,7 @@ template_author: FastConnect
 
 imports:
   - "tosca-normative-types:1.0.0-SNAPSHOT"
-  - "docker-engine:0.0.1-SNAPSHOT"
+  - "docker-engine:1.0.0-SNAPSHOT"
 
 node_types:
   alien.nodes.MesosMaster:
@@ -16,6 +16,7 @@ node_types:
     tags:
       icon: /images/mesos_icon.png
     properties:
+      # TODO: implement firewall rules, hooks & modules
       firewall_rules:
         type: string
         required: false
@@ -94,6 +95,7 @@ node_types:
     tags:
       icon: /images/mesos_icon.png
     properties:
+      # TODO: implement firewall rules, hooks, modules & attributes
       firewall_rules:
         type: string
         required: false
@@ -121,10 +123,10 @@ node_types:
         required: false
       isolation:
         type: string
-        required: false
+        required: true
+        default: "posix/cpu,posix/mem"
         constraints:
           - valid_values: [ "posix/cpu,posix/mem", "cgroups/cpu,cgroups/mem" ]
-          # Todo extend to more values
       work_dir:
         type: string
         required: false
@@ -145,6 +147,7 @@ node_types:
             MESOS_HOSTNAME: { get_attribute: [HOST, public_ip_address] }
             MESOS_LOG_DIR: { get_property: [SELF, log_dir] }
             MESOS_WORK_DIR: { get_property: [SELF, work_dir] }
+            MESOS_ISOLATION: { get_property: [SELF, isolation] }
           implementation: scripts/slave/configure.sh
         start:
           implementation: scripts/slave/start.sh
@@ -176,7 +179,8 @@ node_types:
   alien.nodes.Marathon:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
-      Marathon scheduler. NB: This component requires Oracle's Java 8. The Oracle licence is therefore implicitly accepted. The licence can be found here: http://www.oracle.com/technetwork/java/javase/downloads/thirdpartylicensereadme-java8-2168078.txt.
+      Marathon scheduler.
+      NB: This component requires Oracle's Java 8. The Oracle licence is therefore implicitly accepted. The licence can be found here: http://www.oracle.com/technetwork/java/javase/downloads/thirdpartylicensereadme-java8-2168078.txt.
     tags:
       icon: images/marathon_icon.png
     attributes:
