@@ -50,3 +50,11 @@ To prevent misuse, we used node-filters on the Mesos version.
 - For clusters up to several thousands of nodes, having 3 Masters in HA-mode is perfectly fine. To ensure a proper Zookeeper **quorum**, the number of masters must always be an odd number.
 - Provided templates are for testing purposes and may not be fitted for production.
 - You can access Aurora, Mesos and Marathon UIs using the Attribute *external_url*.
+
+## Alien templates for Mesos
+
+This repository contains 3 ready-to-use templates of Mesos topologies for [Alien4Cloud](http://alien4cloud.github.io).
+They all are fully scalable and leverage Zookeeper for high-availability. We provide:
+ - A simple [Mesos cluster](topology-mesos/mesos-ha-template.yml) with scalable slaves and masters,
+ - An [Aurora cluster template](topology-aurora/aurora-template.yml),
+ - A complete [Marathon cluster](topology-marathon/marathon-template) with built-in DNS and service discovery.
