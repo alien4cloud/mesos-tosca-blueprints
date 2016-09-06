@@ -131,6 +131,9 @@ node_types:
         type: string
         required: false
         default: "/var/lib/mesos"
+    artifacts:
+      - rexray_config: artifacts/credentials/rexray_config.yml
+        type: tosca.artifacts.File
     interfaces:
       Standard:
         create:
