@@ -1,0 +1,21 @@
+rexray:
+  logLevel: warn
+  storageDrivers:
+  - <ec2 || openstack>
+  volume:
+    mount:
+      preempt: true
+    unmount:
+      ignoreusedcount: true
+docker:
+  size: <volume-size>
+  aws:
+    accessKey: <your-access-key>
+    secretKey: <your-secret-key>
+    region: eu-west-1
+  openstack:
+    authUrl: <https://keystoneHost:35357/v2.0/>
+    username: <username>
+    password: <password>
+    tenantName: <tenantName>
+    regionName: <regionName>

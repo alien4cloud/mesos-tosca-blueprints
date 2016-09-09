@@ -1,4 +1,4 @@
-tosca_definitions_version: alien_dsl_1_2_0
+tosca_definitions_version: alien_dsl_1_3_0
 description: TOSCA Apache Mesos & Mesosphere Marathon profile
 template_name: mesos-types
 template_version: 1.2.0-SNAPSHOT
@@ -45,8 +45,9 @@ node_types:
         default: "Mesos cluster"
         required: false
     artifacts:
-      - zoo_config: artifacts/zoo.cfg
-        type: tosca.artifacts.File
+      - zoo_config:
+          file: artifacts/zoo.cfg
+          type: tosca.artifacts.File
     attributes:
       external_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":", get_property: [SELF, port]] }
       master_url: { concat: ["zk://", get_operation_output: [SELF, Standard, configure, zk_endpoints], "/mesos"] }
@@ -131,9 +132,6 @@ node_types:
         type: string
         required: false
         default: "/var/lib/mesos"
-    artifacts:
-      - rexray_config: artifacts/credentials/rexray_config.yml
-        type: tosca.artifacts.File
     interfaces:
       Standard:
         create:
@@ -172,7 +170,7 @@ node_types:
       - master: alien.capabilities.MesosMaster
         type: alien.relationships.MesosSlaveConnectsToMaster
         occurrences: [1, 1]
-      - docker_host: alien.capabilities.DockerHost
+      - docker_cli: alien.capabilities.DockerCLI
         type: alien.relationships.MesosSlaveDependsOnDocker
         occurrences: [0, 1]
       - dns_server: alien.capabilities.MesosDNS
@@ -232,10 +230,12 @@ node_types:
         type: alien.relationships.MesosDNSConnectsToMaster
         occurrences: [1, 1]
     artifacts:
-      - dns_config: artifacts/mesos-dns-config.json
-        type: tosca.artifacts.File
-      - marathon_template: artifacts/mesos-dns-template.json
-        type: tosca.artifacts.File
+      - dns_config:
+          file: artifacts/mesos-dns-config.json
+          type: tosca.artifacts.File
+      - marathon_template:
+          file: artifacts/mesos-dns-template.json
+          type: tosca.artifacts.File
     interfaces:
       Standard:
         create: scripts/service-discovery/install-mesosdns.sh
@@ -269,8 +269,9 @@ node_types:
         type: tosca.relationships.HostedOn
         occurrences: [1, 1]
     artifacts:
-      - marathon_template: artifacts/marathon-lb-template.json
-        type: tosca.artifacts.File
+      - marathon_template:
+          file: artifacts/marathon-lb-template.json
+          type: tosca.artifacts.File
     interfaces:
       Standard:
         configure:
@@ -281,6 +282,27 @@ node_types:
             MARATHON_API: { get_attribute: [HOST, api_url] }
           implementation: scripts/service-discovery/configure-marathonlb.sh
         start: scripts/service-discovery/start-marathonlb.sh
+  alien.nodes.Rexray:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: Docker volume drive plugin for external storage management.
+    properties:
+      component_version:
+        type: string
+        default: 0.3.3
+    requirements:
+      - host: alien.capabilities.DockerHost
+        type: tosca.relationships.HostedOn
+        occurrences: [1, 1]
+    artifacts:
+      - rexray_config:
+          type: tosca.artifacts.File
+    interfaces:
+      Standard:
+        create:
+          inputs:
+            REXRAY_VERSION: { get_property: [SELF, component_version] }
+          implementation: scripts/rexray/create.sh
+        start: scripts/rexray/start.sh
 
 capability_types:
   alien.capabilities.MesosMasterHost:

@@ -5,9 +5,6 @@ echo "Starting mesos slave..."
 # Source Mesos environment variables
 source ~/mesos_install/mesos_env.sh
 
-# start rexray service
-sudo service rexray start
-
 # Start a mesos slave
 sudo -E nohup mesos-slave >/dev/null 2>&1 &
 
