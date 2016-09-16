@@ -9,5 +9,17 @@
   "ports": [
     53,
     8123
+  ],
+  "healthChecks": [
+    {
+      "path": "/v1/version",
+      "portIndex": 1,
+      "protocol": "HTTP",
+      "gracePeriodSeconds": 60,
+      "intervalSeconds": 5,
+      "timeoutSeconds": 2,
+      "maxConsecutiveFailures": 2,
+      "ignoreHttp1xx": false
+    }
   ]
 }
