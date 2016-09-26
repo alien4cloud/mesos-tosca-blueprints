@@ -25,6 +25,7 @@ that it is always up and will gracefully handle failures. It is installed on the
 Marathon provides a complete HTTP REST API for launching and managing services. Marathon relies on the Docker engine for Docker support.
 - MesosDNS: A DNS server for Mesos slaves. It enables DNS resolution of tasks within the cluster. When used with Marathon, applications can be resolved through DNS following the following host pattern:  **app_name.marathon.mesos**. Please note that we currently use Marathon to launch MesosDNS (to ensure fault-tolerance).
 - MarathonLB: A load balancer for Marathon. In conjunction with MesosDNS, it enables internal service discovery within the cluster, provided that Marathon apps are launched using the label : `{ "HAPROXY_GROUP": "internal" }`.
+- RexRay : A Docker Volume Driver that Marathon can leverage to handle provision and mounting of external volumes onto Containers. Can work with the Mesos Containerizer by using Mesos DVDi.
 
 ## Requirements
 
