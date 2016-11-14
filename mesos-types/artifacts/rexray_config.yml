@@ -1,0 +1,5 @@
+rexray:
+  logLevel: warn
+libstorage:
+  host: tcp://{{REXRAY_SERVER}}:7979
+  service: {{STORAGE_SERVICE}}

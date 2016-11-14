@@ -1,0 +1,37 @@
+rexray:
+  modules:
+    default-docker:
+      disabled: true
+  logLevel: warn
+libstorage:
+  host: tcp://127.0.0.1:7979
+  embedded: true
+  client:
+    type: controller
+  integeration:
+    volume:
+      operations:
+        # See Marathon & Rexray documentation
+        mount:
+          preempt: true
+        unmount:
+          ignoreusedcount: true
+  server:
+    endpoints:
+      public:
+        address: tcp://:7979
+    services:
+      ebs:
+        driver: ebs # Refers to storage providers defined bellow
+      # Use this to activate TLS encryption. Equivalent configuration must be set on clients too.
+      # tls:
+      #   certFile: /etc/libstorage/libstorage-server.crt
+      #   keyFile: /etc/libstorage/libstorage-server.key
+      #   trustedCertsFile: /etc/libstorage/trusted-certs.crt
+      #   clientCertRequired: true
+
+# Define storage providers like this - Example for AWS EBS
+ebs:
+  accessKey: <your-access-key>
+  secretKey: <your-secret-key>
+  region: <your-region>

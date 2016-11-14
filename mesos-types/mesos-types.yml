@@ -207,6 +207,7 @@ node_types:
         create:
           inputs:
             OS: { get_property: [HOST, os, distribution] }
+            OS_VERS: { get_property: [HOST, os, version] }
           implementation: scripts/marathon/install.sh
         start:
           inputs:
@@ -293,26 +294,50 @@ node_types:
             MARATHON_API: { get_attribute: [HOST, api_url] }
           implementation: scripts/service-discovery/configure-marathonlb.sh
         start: scripts/service-discovery/start-marathonlb.sh
-  alien.nodes.Rexray:
+  alien.nodes.RexrayClient:
     derived_from: tosca.nodes.SoftwareComponent
     description: Docker volume driver plugin for external storage management.
     properties:
-      component_version:
+      storage_service:
         type: string
-        default: 0.3.3
+        required: true
     requirements:
-      - host: alien.capabilities.DockerHost
-        type: tosca.relationships.HostedOn
-        occurrences: [1, 1]
+      - host:
+          capability: alien.capabilities.DockerHost
+          relationship: tosca.relationships.HostedOn
+          occurrences: [1, 1]
+      - libstorage_server:
+          capability: alien.capabilities.LibStorageServer
+          relationship: alien.relationships.RexrayConnectsToLibStorage
+    artifacts:
+      - rexray_config:
+          file: artifacts/rexray_config.yml
+          type: tosca.artifacts.File
+    interfaces:
+      Standard:
+        create: scripts/rexray/create.sh
+        configure:
+          inputs:
+            STORAGE_SERVICE: { get_property: [SELF, storage_service] }
+          implementation: scripts/rexray/configure_client.sh
+        start: scripts/rexray/start.sh
+  alien.nodes.RexrayServer:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: Serves as a centralized libStorage server for Rexray clients
+    capabilities:
+      - libstorage_server: alien.capabilities.LibStorageServer
+    requirements:
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.Compute
+          relationship: tosca.relationships.HostedOn
+          occurrences: [1, 1]
     artifacts:
       - rexray_config:
           type: tosca.artifacts.File
     interfaces:
       Standard:
-        create:
-          inputs:
-            REXRAY_VERSION: { get_property: [SELF, component_version] }
-          implementation: scripts/rexray/create.sh
+        create: scripts/rexray/create.sh
         start: scripts/rexray/start.sh
 
 capability_types:
@@ -328,6 +353,17 @@ capability_types:
     derived_from: tosca.capabilities.Container
   alien.capabilities.MesosDNS:
     derived_from: tosca.capabilities.Root
+  alien.capabilities.LibStorageServer:
+    derived_from: tosca.capabilities.Endpoint
+    properties:
+      protocol:
+        type: string
+        default: tcp
+        required: true
+      port:
+        type: integer
+        required: true
+        default: 7979
 
 relationship_types:
   alien.relationships.MarathonHostedOnMaster:
@@ -369,9 +405,19 @@ relationship_types:
             DNS_IP: { get_attribute: [TARGET, ip_address] }
           implementation: scripts/slave/configure_connectsToDNS.sh
   alien.relationships.MesosSlaveDependsOnDocker:
-      derived_from: tosca.relationships.DependsOn
-      valid_target_types: [ alien.nodes.DockerEngine ]
-      description: Relationship used to bind a Mesos slave to a Docker engine
-      interfaces:
-          Configure:
-            post_configure_source: scripts/slave/configure_dependsOnDocker.sh
+    derived_from: tosca.relationships.DependsOn
+    valid_target_types: [ alien.nodes.DockerEngine ]
+    description: Relationship used to bind a Mesos slave to a Docker engine
+    interfaces:
+        Configure:
+          post_configure_source: scripts/slave/configure_dependsOnDocker.sh
+  alien.relationships.RexrayConnectsToLibStorage:
+    derived_from: tosca.relationships.ConnectsTo
+    valid_target_types: [ alien.nodes.RexrayServer ]
+    description: Connects Rexray clients to the Rexray server
+    interfaces:
+      Configure:
+        post_configure_source:
+          inputs:
+            REXRAY_SERVER: { get_attribute: [TARGET, ip_address ] }
+          implementation: scripts/rexray/configure_connectsToLibStorage.sh

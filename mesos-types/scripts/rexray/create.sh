@@ -1,6 +1,12 @@
+#!/bin/bash -e
+
 # Get apt-lock
 NAME="Rexray"
 LOCK="/tmp/lockaptget"
+
+read -r -a array <<< ${INSTANCES}
+# RexrayServer is not scalable
+[ $INSTANCE == ${array[0]} ] || exit 0
 
 while true; do
     if mkdir "${LOCK}" &>/dev/null; then
@@ -17,7 +23,7 @@ while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1 ; do
 done
 sudo rm -f /var/lib/dpkg/lock
 
-curl -sSL https://dl.bintray.com/emccode/rexray/install | sudo sh -s -- stable ${REXRAY_VERSION}
+curl -sSL https://dl.bintray.com/emccode/rexray/install | sudo sh -s -- stable
 sudo cp ${rexray_config} /etc/rexray/config.yml
 
 rm -rf "${LOCK}"
