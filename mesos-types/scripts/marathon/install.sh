@@ -3,7 +3,7 @@
 # Using mesosphere packages, already configured through mesos's install
 
 case $OS in
-    "ubuntu")
+    "ubuntu"|"debian")
         # Get apt-lock
         NAME="Marathon"
         LOCK="/tmp/lockaptget"
@@ -23,18 +23,23 @@ case $OS in
         done
         sudo rm -f /var/lib/dpkg/lock
 
-        # Install Java 8 from Oracle's PPA
-        sudo add-apt-repository -y ppa:webupd8team/java
-        sudo apt-get update -y
-        echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-        echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-        sudo apt-get install -y oracle-java8-installer oracle-java8-set-default
+        if [ "$OS_VERS" == "14.04" ]; then
+          # Ubuntu 14.04 does not support openjdk8 yet - install from Oracle using webupd8team PPA
+          sudo add-apt-repository -y ppa:webupd8team/java
+          sudo apt-get update -y
+          echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+          echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+          sudo apt-get install -y oracle-java8-installer oracle-java8-set-default
+        fi
 
-        # Install marathon
+        # Install marathon - java8 is installed as a dependency
         sudo apt-get install -y marathon
 
         rm -rf "${LOCK}"
         echo "$NAME released apt lock"
+        ;;
+    "redhat"|"centos")
+        sudo yum install -y marathon
         ;;
     *)
         echo "${OS} is not supported ATM. Exiting..." && exit 1
