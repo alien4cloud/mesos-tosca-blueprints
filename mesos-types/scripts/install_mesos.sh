@@ -56,10 +56,10 @@ case ${OS_DISTR} in
         echo "$NAME released apt lock"
         ;;
     "redhat"|"centos")
-        if [ "${OS_VERS}" -ge "7" ]; then
+        if [ "${OS_VERS}" == "7.1" ]; then
             # Add the repository
             sudo rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
-        elif [ "${OS_VERS}" -ge "6" ] && [ "${OS_VERS}" -lt "7" ]; then
+        elif [ "${OS_VERS}" == "6.2" ]; then
             # Add mesos and zookeeper repositories
             sudo rpm -Uvh http://repos.mesosphere.com/el/6/noarch/RPMS/mesosphere-el-repo-6-2.noarch.rpm
             sudo rpm -Uvh http://archive.cloudera.com/cdh4/one-click-install/redhat/6/x86_64/cloudera-cdh-4-0.x86_64.rpm
