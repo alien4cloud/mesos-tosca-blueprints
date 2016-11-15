@@ -11,7 +11,7 @@ imports:
 
 topology_template:
   input_artifacts:
-    rexray_config:
+    rexray_server_config:
       type: tosca.artifacts.File
   node_templates:
     MesosMaster:
@@ -116,19 +116,17 @@ topology_template:
             node: Marathon
             capability: alien.capabilities.MarathonHost
             relationship: tosca.relationships.HostedOn
-    Rexray:
-      type: alien.nodes.Rexray
-      properties:
-        component_version: 0.3.3
-      artifacts:
-        rexray_config:
-          type: tosca.artifacts.File
-          file: { get_input_artifact: rexray_config }
+    RexrayClient:
+      type: alien.nodes.RexrayClient
       requirements:
         - host:
             node: DockerEngine
             capability: alien.capabilities.DockerHost
             relationship: tosca.relationships.HostedOn
+        - libstorage_server:
+            node: RexrayServer
+            capability: alien.capabilities.LibStorageServer
+            relationship: alien.relationships.RexrayConnectsToLibStorage
     MesosSlave_2:
       type: alien.nodes.MesosSlave
       properties:
@@ -190,25 +188,34 @@ topology_template:
             distribution: ubuntu
             version: 14.04
             architecture: x86_64
-    Rexray_2:
-      type: alien.nodes.Rexray
-      properties:
-        component_version: 0.3.3
-      artifacts:
-        rexray_config:
-          type: tosca.artifacts.File
-          file: { get_input_artifact: rexray_config }
+    RexrayClient_2:
+      type: alien.nodes.RexrayClient
       requirements:
         - host:
             node: DockerEngine_2
             capability: alien.capabilities.DockerHost
             relationship: tosca.relationships.HostedOn
+        - libstorage_server:
+            node: RexrayServer
+            capability: alien.capabilities.LibStorageServer
+            relationship: alien.relationships.RexrayConnectsToLibStorage
     Marathon:
       type: alien.nodes.Marathon
       requirements:
         - host:
             node: MesosMaster
             capability: alien.capabilities.MesosMasterHost
+            relationship: tosca.relationships.HostedOn
+    RexrayServer:
+      type: alien.nodes.RexrayServer
+      artifacts:
+        rexray_config:
+          type: tosca.artifacts.File
+          file: { get_input_artifact: rexray_server_config }
+      requirements:
+        - host:
+            node: MasterCompute
+            capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
   outputs:
     MesosMaster_external_url:
