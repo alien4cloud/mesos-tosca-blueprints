@@ -1,7 +1,11 @@
 #!/bin/bash -e
 
 # Config ZK
+sudo mkdir -p /var/lib/zookeeper/
+sudo chown -R zookeeper /var/lib/zookeeper/
 sudo cp ${zoo_config} /etc/zookeeper/conf/zoo.cfg
+# If using cloudera's packages run service init
+hash zookeeper-server && sudo service zookeeper-server init
 
 # Put together the zk url and the zoo.cfg file
 zk_endpoints=""

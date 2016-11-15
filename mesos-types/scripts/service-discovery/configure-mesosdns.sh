@@ -12,8 +12,12 @@ resolvers="${resolvers%?}"
 sudo sed -i "s/{{resolvers}}/${resolvers}/" /usr/local/mesos-dns/config.json
 
 # Add self as a dns server
-sudo sed -i "1s/^/nameserver ${SLAVE_LOCAL_IP}\n /" /etc/resolvconf/resolv.conf.d/head
-sudo resolvconf -u
+if [ -f /etc/resolvconf/resolv.conf.d/head ]; then
+  sudo sed -i "2s/^/nameserver ${SLAVE_LOCAL_IP}\n /" /etc/resolvconf/resolv.conf.d/head
+  sudo resolvconf -u
+else
+  sudo sed -i "2s/^/nameserver ${SLAVE_LOCAL_IP}\n /" /etc/resolv.conf
+fi
 
 # Configure marathon application file
 sudo cp ${marathon_template} /usr/local/mesos-dns/app_definition.json

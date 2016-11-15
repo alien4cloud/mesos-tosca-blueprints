@@ -56,20 +56,22 @@ case ${OS_DISTR} in
         echo "$NAME released apt lock"
         ;;
     "redhat"|"centos")
+        # Get Mesos from mesosphere and Zookeeper from cloudera
         if [ "${OS_VERS}" == "7.1" ]; then
-            # Add the repository
             sudo rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+            sudo rpm -Uvh https://archive.cloudera.com/cdh5/one-click-install/redhat/7/x86_64/cloudera-cdh-5-0.x86_64.rpm
         elif [ "${OS_VERS}" == "6.2" ]; then
-            # Add mesos and zookeeper repositories
             sudo rpm -Uvh http://repos.mesosphere.com/el/6/noarch/RPMS/mesosphere-el-repo-6-2.noarch.rpm
-            sudo rpm -Uvh http://archive.cloudera.com/cdh4/one-click-install/redhat/6/x86_64/cloudera-cdh-4-0.x86_64.rpm
-
-            # Install ZK
-            sudo yum -y install zookeeper
+            sudo rpm -Uvh https://archive.cloudera.com/cdh5/one-click-install/redhat/6/x86_64/cloudera-cdh-5-0.x86_64.rpm
         else
             echo "Unsupported version ${OS_VERS} of ${OS_DISTR}. Exiting now..."
             exit 1
         fi
+        sudo yum -y update && sudo yum clean all
+
+        # Install zookeeper
+        sudo yum -y install java-1.8.0-openjdk-headless
+        sudo yum -y install zookeeper-server
 
         # Install Mesos
         if [ ${MESOS_VERSION} ]; then
@@ -93,14 +95,14 @@ case ${OS_DISTR} in
         ;;
 esac
 
-echo "Stopping mesosphere services"
+echo "Stopping services…"
 # Stop services from running - if they are
 ( sudo service mesos-master status | grep 'running' ) && sudo service master-stop stop
 ( sudo service mesos-slave status | grep 'running' ) && sudo service mesos-slave stop
 ( sudo service zookeeper status | grep 'running' ) && sudo service zookeeper stop
 
 # Prevent services from being run upon reboot
-if { [ ${OS_DISTR} = 'redhat' ] || [ ${OS_DISTR} = 'centos' ]; } && [ ${OS_VERS} -ge 7 ]; then
+if [ ${OS_DISTR} == 'redhat' ] || [ ${OS_DISTR} == 'centos' ]; then
     systemctl disable mesos-slave.service
     systemctl disable mesos-master.service
     systemctl disable zookeeper.service

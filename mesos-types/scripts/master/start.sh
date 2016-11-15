@@ -1,11 +1,12 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # Start a mesos Master
 echo "Starting mesos master..."
 
 # Start zookeeper
-sudo service zookeeper start # TODO use the zk binary instead of mesosphere services : sudo -E nohup pathToZk/bin/zkserver.sh >/dev/null 2>&1 &
-sleep 5 # TODO Wait and loop til ZK is up and running
+sudo service zookeeper start || sudo service zookeeper-server start
+# TODO use the zk binary instead of services : sudo -E nohup pathToZk/bin/zkserver.sh >/dev/null 2>&1 &
+sleep 5 # Wait a few secs until ZK is up and running
 
 # Source Mesos environment variables
 source ~/mesos_install/mesos_env.sh
