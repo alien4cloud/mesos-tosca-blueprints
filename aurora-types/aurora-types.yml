@@ -1,12 +1,12 @@
 tosca_definitions_version: alien_dsl_1_2_0
 description: TOSCA Apache Aurora profile
 template_name: aurora-types
-template_version: 1.0.0-SNAPSHOT
+template_version: 1.0.0
 template_author: FastConnect
 
 imports:
-  - "tosca-normative-types:1.0.0-SNAPSHOT"
-  - "mesos-types:1.2.0-SNAPSHOT"
+  - "tosca-normative-types:1.0.0-ALIEN12"
+  - "mesos-types:1.2.0"
 
 node_types:
   alien.nodes.AuroraScheduler:

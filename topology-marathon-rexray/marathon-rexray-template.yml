@@ -1,13 +1,13 @@
 tosca_definitions_version: alien_dsl_1_3_0
 description: Alien4Cloud generated service template
 template_name: MarathonRexRay
-template_version: 1.0.0-SNAPSHOT
-template_author: admin
+template_version: 1.0.0
+template_author: Fastconnect
 
 imports:
-  - tosca-normative-types:1.0.0-SNAPSHOT
-  - docker-engine:1.0.0-SNAPSHOT
-  - mesos-types:1.2.0-SNAPSHOT
+  - tosca-normative-types:1.0.0-ALIEN12
+  - docker-engine:1.0.0
+  - mesos-types:1.2.0
 
 topology_template:
   input_artifacts:

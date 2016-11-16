@@ -1,12 +1,12 @@
 tosca_definitions_version: alien_dsl_1_3_0
 description: TOSCA Apache Mesos & Mesosphere Marathon profile
 template_name: mesos-types
-template_version: 1.2.0-SNAPSHOT
+template_version: 1.2.0
 template_author: FastConnect
 
 imports:
-  - "tosca-normative-types:1.0.0-SNAPSHOT"
-  - "docker-engine:1.0.0-SNAPSHOT"
+  - "tosca-normative-types:1.0.0-ALIEN12"
+  - "docker-engine:1.0.0"
 
 node_types:
   alien.nodes.MesosMaster:
