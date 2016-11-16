@@ -13,6 +13,10 @@ topology_template:
   input_artifacts:
     rexray_server_config:
       type: tosca.artifacts.File
+  inputs:
+    storage_provider:
+      type: string
+      required: true
   node_templates:
     MesosMaster:
       type: alien.nodes.MesosMaster
@@ -118,6 +122,8 @@ topology_template:
             relationship: tosca.relationships.HostedOn
     RexrayClient:
       type: alien.nodes.RexrayClient
+      properties:
+        storage_service: { get_input: storage_provider }
       requirements:
         - host:
             node: DockerEngine
@@ -190,6 +196,8 @@ topology_template:
             architecture: x86_64
     RexrayClient_2:
       type: alien.nodes.RexrayClient
+      properties:
+        storage_service: { get_input: storage_provider }
       requirements:
         - host:
             node: DockerEngine_2
