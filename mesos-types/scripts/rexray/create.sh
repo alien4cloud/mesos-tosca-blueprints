@@ -4,9 +4,10 @@
 NAME="Rexray"
 LOCK="/tmp/lockaptget"
 
-read -r -a array <<< ${INSTANCES}
-# RexrayServer is not scalable
-[ $INSTANCE == ${array[0]} ] || exit 0
+# Fixme - Find a better way to deal with multiple instances 
+# read -r -a array <<< ${INSTANCES}
+# # RexrayServer is not scalable
+# [ $INSTANCE == ${array[0]} ] || exit 0
 
 while true; do
     if mkdir "${LOCK}" &>/dev/null; then
