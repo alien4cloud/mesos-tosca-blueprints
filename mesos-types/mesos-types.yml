@@ -200,7 +200,7 @@ node_types:
     requirements:
       - host:
           capability: alien.capabilities.MesosMasterHost
-          relationship: tosca.relationships.HostedOn
+          relationship: alien.relationships.MarathonHostedOnMaster
           occurrences: [1, 1]
     interfaces:
       Standard:
