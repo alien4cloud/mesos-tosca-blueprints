@@ -191,6 +191,11 @@ node_types:
       NB: This component requires Oracle's Java 8. The Oracle licence is therefore implicitly accepted. The licence can be found here: http://www.oracle.com/technetwork/java/javase/downloads/thirdpartylicensereadme-java8-2168078.txt.
     tags:
       icon: images/marathon_icon.png
+    properties:
+      version:
+        type: string
+        required: true
+        default: "1.3.10-1.0.627"
     attributes:
       external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8080/ui"] }
       api_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":8080/v2"] }
@@ -208,6 +213,7 @@ node_types:
           inputs:
             OS: { get_property: [HOST, os, distribution] }
             OS_VERS: { get_property: [HOST, os, version] }
+            MARATHON_VERSION: { get_property: [SELF, version] }
           implementation: scripts/marathon/install.sh
         start:
           inputs:

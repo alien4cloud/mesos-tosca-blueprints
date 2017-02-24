@@ -33,7 +33,8 @@ case $OS in
         fi
 
         # Install marathon - java8 is installed as a dependency
-        sudo apt-get install -y marathon
+        pkg="${MARATHON_VERSION}.${OS}$(echo ${OS_VERS} | tr -d '.')"
+        sudo apt-get install -y marathon=${pkg}
 
         rm -rf "${LOCK}"
         echo "$NAME released apt lock"
