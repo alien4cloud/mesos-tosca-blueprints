@@ -12,7 +12,7 @@ imports:
   - mesos-types:1.4.0-SNAPSHOT
 
 node_types:
-  alien.nodes.AuroraScheduler:
+  org.alien4cloud.nodes.AuroraScheduler:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       Aurora Scheduler
@@ -27,8 +27,8 @@ node_types:
       external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8081/scheduler"] }
     requirements:
       - host: 
-          capability: alien.capabilities.MesosMaster
-          relationship: alien.relationships.AuroraSchedulerHostedOnMaster
+          capability: org.alien4cloud.capabilities.MesosMaster
+          relationship: org.alien4cloud.relationships.AuroraSchedulerHostedOnMaster
           occurrences: [1, 1]
           node_filter:
             properties:
@@ -55,7 +55,7 @@ node_types:
             OS: { get_property: [HOST, os, distribution] }
           implementation: scripts/stop_scheduler.sh
 
-  alien.nodes.AuroraExecutor:
+  org.alien4cloud.nodes.AuroraExecutor:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       Aurora Executor
@@ -63,8 +63,8 @@ node_types:
       icon: images/aurora_icon.png
     requirements:
       - host: 
-          capability: alien.capabilities.MesosSlaveHost
-          relationship: alien.relationships.AuroraExecutorHostedOnSlave
+          capability: org.alien4cloud.capabilities.MesosSlaveHost
+          relationship: org.alien4cloud.relationships.AuroraExecutorHostedOnSlave
           occurrences: [1, 1]
           node_filter:
             properties:
@@ -81,11 +81,11 @@ node_types:
           implementation: scripts/configure_executor.sh
 
 relationship_types:
-  alien.relationships.AuroraSchedulerHostedOnMaster:
+  org.alien4cloud.relationships.AuroraSchedulerHostedOnMaster:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind the Aurora scheduler to a Mesos Master
-    valid_target_types: [ alien.nodes.MesosMaster ]
-  alien.relationships.AuroraExecutorHostedOnSlave:
+    valid_target_types: [ org.alien4cloud.nodes.MesosMaster ]
+  org.alien4cloud.relationships.AuroraExecutorHostedOnSlave:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind Thermos, the Aurora executor, to a mesos worker
-    valid_target_types: [ alien.nodes.MesosSlave ]
+    valid_target_types: [ org.alien4cloud.nodes.MesosSlave ]

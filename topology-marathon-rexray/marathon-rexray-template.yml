@@ -22,7 +22,7 @@ topology_template:
       required: true
   node_templates:
     MesosMaster:
-      type: alien.nodes.MesosMaster
+      type: org.alien4cloud.nodes.MesosMaster
       properties:
         log_dir: /var/log/mesos
         cluster_name: Mesos with A4C
@@ -89,7 +89,7 @@ topology_template:
             num_cpus: 2
             mem_size: 4096 MB
     MesosSlave:
-      type: alien.nodes.MesosSlave
+      type: org.alien4cloud.nodes.MesosSlave
       properties:
         log_dir: /var/log/mesos
         port: 5051
@@ -98,22 +98,22 @@ topology_template:
       requirements:
         - dns_server:
             node: MesosDNS
-            capability: alien.capabilities.MesosDNS
-            relationship: alien.relationships.MesosSlaveConnectsToDNS
+            capability: org.alien4cloud.capabilities.MesosDNS
+            relationship: org.alien4cloud.relationships.MesosSlaveConnectsToDNS
         - master:
             node: MesosMaster
-            capability: alien.capabilities.MesosMaster
-            relationship: alien.relationships.MesosSlaveConnectsToMaster
+            capability: org.alien4cloud.capabilities.MesosMaster
+            relationship: org.alien4cloud.relationships.MesosSlaveConnectsToMaster
         - docker_cli:
             node: DockerEngine
             capability: org.alien4cloud.capabilities.DockerCLI
-            relationship: alien.relationships.MesosSlaveDependsOnDocker
+            relationship: org.alien4cloud.relationships.MesosSlaveDependsOnDocker
         - host:
             node: SlaveCompute
             capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
     MarathonLB:
-      type: alien.nodes.MarathonLB
+      type: org.alien4cloud.nodes.MarathonLB
       properties:
         instances: 1
         cpu_alloc: 1.0
@@ -121,10 +121,10 @@ topology_template:
       requirements:
         - host:
             node: Marathon
-            capability: alien.capabilities.MarathonHost
+            capability: org.alien4cloud.capabilities.MarathonHost
             relationship: tosca.relationships.HostedOn
     RexrayClient:
-      type: alien.nodes.RexrayClient
+      type: org.alien4cloud.nodes.RexrayClient
       properties:
         storage_service: { get_input: storage_provider }
       requirements:
@@ -134,10 +134,10 @@ topology_template:
             relationship: tosca.relationships.HostedOn
         - libstorage_server:
             node: RexrayServer
-            capability: alien.capabilities.LibStorageServer
-            relationship: alien.relationships.RexrayConnectsToLibStorage
+            capability: org.alien4cloud.capabilities.LibStorageServer
+            relationship: org.alien4cloud.relationships.RexrayConnectsToLibStorage
     MesosSlave_2:
-      type: alien.nodes.MesosSlave
+      type: org.alien4cloud.nodes.MesosSlave
       properties:
         log_dir: /var/log/mesos
         port: 5051
@@ -150,26 +150,26 @@ topology_template:
             relationship: tosca.relationships.HostedOn
         - master:
             node: MesosMaster
-            capability: alien.capabilities.MesosMaster
-            relationship: alien.relationships.MesosSlaveConnectsToMaster
+            capability: org.alien4cloud.capabilities.MesosMaster
+            relationship: org.alien4cloud.relationships.MesosSlaveConnectsToMaster
         - docker_cli:
             node: DockerEngine_2
             capability: org.alien4cloud.capabilities.DockerCLI
-            relationship: alien.relationships.MesosSlaveDependsOnDocker
+            relationship: org.alien4cloud.relationships.MesosSlaveDependsOnDocker
     MesosDNS:
-      type: alien.nodes.MesosDNS
+      type: org.alien4cloud.nodes.MesosDNS
       properties:
         cpu_alloc: 1.0
         mem_alloc: 512
       requirements:
         - host:
             node: MesosSlave_2
-            capability: alien.capabilities.MesosSlaveHost
+            capability: org.alien4cloud.capabilities.MesosSlaveHost
             relationship: tosca.relationships.HostedOn
         - marathon:
             node: Marathon
-            capability: alien.capabilities.MarathonMaster
-            relationship: alien.relationships.MesosDNSConnectsToMaster
+            capability: org.alien4cloud.capabilities.MarathonMaster
+            relationship: org.alien4cloud.relationships.MesosDNSConnectsToMaster
     DockerEngine:
       type: org.alien4cloud.nodes.DockerEngine
       requirements:
@@ -198,7 +198,7 @@ topology_template:
             version: 14.04
             architecture: x86_64
     RexrayClient_2:
-      type: alien.nodes.RexrayClient
+      type: org.alien4cloud.nodes.RexrayClient
       properties:
         storage_service: { get_input: storage_provider }
       requirements:
@@ -208,17 +208,17 @@ topology_template:
             relationship: tosca.relationships.HostedOn
         - libstorage_server:
             node: RexrayServer
-            capability: alien.capabilities.LibStorageServer
-            relationship: alien.relationships.RexrayConnectsToLibStorage
+            capability: org.alien4cloud.capabilities.LibStorageServer
+            relationship: org.alien4cloud.relationships.RexrayConnectsToLibStorage
     Marathon:
-      type: alien.nodes.Marathon
+      type: org.alien4cloud.nodes.Marathon
       requirements:
         - host:
             node: MesosMaster
-            capability: alien.capabilities.MesosMasterHost
+            capability: org.alien4cloud.capabilities.MesosMasterHost
             relationship: tosca.relationships.HostedOn
     RexrayServer:
-      type: alien.nodes.RexrayServer
+      type: org.alien4cloud.nodes.RexrayServer
       artifacts:
         rexray_config:
           type: tosca.artifacts.File

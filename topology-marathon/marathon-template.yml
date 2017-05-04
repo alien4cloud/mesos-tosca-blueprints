@@ -35,7 +35,7 @@ topology_template:
            version: 14.04
            architecture: x86_64
    MesosMaster:
-     type: alien.nodes.MesosMaster
+     type: org.alien4cloud.nodes.MesosMaster
      properties:
        log_dir: /var/log/mesos
        cluster_name: Mesos with A4C
@@ -47,11 +47,11 @@ topology_template:
            capability: tosca.capabilities.Container
            relationship: tosca.relationships.HostedOn
    Marathon:
-     type: alien.nodes.Marathon
+     type: org.alien4cloud.nodes.Marathon
      requirements:
        - host:
            node: MesosMaster
-           capability: alien.capabilities.MesosMasterHost
+           capability: org.alien4cloud.capabilities.MesosMasterHost
            relationship: tosca.relationships.HostedOn
    SlaveCompute:
      type: tosca.nodes.Compute
@@ -74,7 +74,7 @@ topology_template:
            version: 14.04
            architecture: x86_64
    MesosSlave_2:
-     type: alien.nodes.MesosSlave
+     type: org.alien4cloud.nodes.MesosSlave
      properties:
        log_dir: /var/log/mesos
        port: 5051
@@ -87,25 +87,25 @@ topology_template:
            relationship: tosca.relationships.HostedOn
        - master:
            node: MesosMaster
-           capability: alien.capabilities.MesosMaster
-           relationship: alien.relationships.MesosSlaveConnectsToMaster
+           capability: org.alien4cloud.capabilities.MesosMaster
+           relationship: org.alien4cloud.relationships.MesosSlaveConnectsToMaster
        - docker_cli:
            node: DockerEngine_2
            capability: org.alien4cloud.capabilities.DockerCLI
-           relationship: alien.relationships.MesosSlaveDependsOnDocker
+           relationship: org.alien4cloud.relationships.MesosSlaveDependsOnDocker
    MesosDNS:
-     type: alien.nodes.MesosDNS
+     type: org.alien4cloud.nodes.MesosDNS
      properties:
        cpu_alloc: 1.0
        mem_alloc: 512
      requirements:
        - marathon:
            node: Marathon
-           capability: alien.capabilities.MarathonMaster
-           relationship: alien.relationships.MesosDNSConnectsToMaster
+           capability: org.alien4cloud.capabilities.MarathonMaster
+           relationship: org.alien4cloud.relationships.MesosDNSConnectsToMaster
        - host:
            node: MesosSlave_2
-           capability: alien.capabilities.MesosSlaveHost
+           capability: org.alien4cloud.capabilities.MesosSlaveHost
            relationship: tosca.relationships.HostedOn
    DockerEngine:
      type: org.alien4cloud.nodes.DockerEngine
@@ -142,7 +142,7 @@ topology_template:
            capability: tosca.capabilities.Container
            relationship: tosca.relationships.HostedOn
    MesosSlave:
-     type: alien.nodes.MesosSlave
+     type: org.alien4cloud.nodes.MesosSlave
      properties:
        log_dir: /var/log/mesos
        port: 5051
@@ -151,22 +151,22 @@ topology_template:
      requirements:
        - master:
            node: MesosMaster
-           capability: alien.capabilities.MesosMaster
-           relationship: alien.relationships.MesosSlaveConnectsToMaster
+           capability: org.alien4cloud.capabilities.MesosMaster
+           relationship: org.alien4cloud.relationships.MesosSlaveConnectsToMaster
        - docker_cli:
            node: DockerEngine
            capability: org.alien4cloud.capabilities.DockerCLI
-           relationship: alien.relationships.MesosSlaveDependsOnDocker
+           relationship: org.alien4cloud.relationships.MesosSlaveDependsOnDocker
        - dns_server:
            node: MesosDNS
-           capability: alien.capabilities.MesosDNS
-           relationship: alien.relationships.MesosSlaveConnectsToDNS
+           capability: org.alien4cloud.capabilities.MesosDNS
+           relationship: org.alien4cloud.relationships.MesosSlaveConnectsToDNS
        - host:
            node: SlaveCompute
            capability: tosca.capabilities.Container
            relationship: tosca.relationships.HostedOn
    MarathonLB:
-     type: alien.nodes.MarathonLB
+     type: org.alien4cloud.nodes.MarathonLB
      properties:
        instances: 1
        cpu_alloc: 1.0
@@ -174,7 +174,7 @@ topology_template:
      requirements:
        - host:
            node: Marathon
-           capability: alien.capabilities.MarathonHost
+           capability: org.alien4cloud.capabilities.MarathonHost
            relationship: tosca.relationships.HostedOn
   outputs:
     MesosMaster_external_url:

@@ -35,7 +35,7 @@ topology_template:
             max_instances: 100
             default_instances: 3
     MesosMaster:
-      type: alien.nodes.MesosMaster
+      type: org.alien4cloud.nodes.MesosMaster
       properties:
         work_dir: /var/lib/mesos
         log_dir: /var/log/mesos
@@ -48,12 +48,12 @@ topology_template:
             capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
     AuroraScheduler:
-      type: alien.nodes.AuroraScheduler
+      type: org.alien4cloud.nodes.AuroraScheduler
       requirements:
         - host:
             node: MesosMaster
-            capability: alien.capabilities.MesosMaster
-            relationship: alien.relationships.AuroraSchedulerHostedOnMaster
+            capability: org.alien4cloud.capabilities.MesosMaster
+            relationship: org.alien4cloud.relationships.AuroraSchedulerHostedOnMaster
     Master_Compute:
       type: tosca.nodes.Compute
       capabilities:
@@ -75,14 +75,14 @@ topology_template:
             max_instances: 5
             default_instances: 3
     AuroraExecutor:
-      type: alien.nodes.AuroraExecutor
+      type: org.alien4cloud.nodes.AuroraExecutor
       requirements:
         - host:
             node: MesosSlave
-            capability: alien.capabilities.MesosSlaveHost
-            relationship: alien.relationships.AuroraExecutorHostedOnSlave
+            capability: org.alien4cloud.capabilities.MesosSlaveHost
+            relationship: org.alien4cloud.relationships.AuroraExecutorHostedOnSlave
     MesosSlave:
-      type: alien.nodes.MesosSlave
+      type: org.alien4cloud.nodes.MesosSlave
       properties:
         log_dir: /var/log/mesos
         port: 5051
@@ -94,8 +94,8 @@ topology_template:
             relationship: tosca.relationships.HostedOn
         - master:
             node: MesosMaster
-            capability: alien.capabilities.MesosMaster
-            relationship: alien.relationships.MesosSlaveConnectsToMaster
+            capability: org.alien4cloud.capabilities.MesosMaster
+            relationship: org.alien4cloud.relationships.MesosSlaveConnectsToMaster
   outputs:
     Mesos_masters:
       description: The masters' URLs.

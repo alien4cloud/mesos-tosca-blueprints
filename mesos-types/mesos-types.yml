@@ -12,7 +12,7 @@ imports:
   - docker-engine-type:1.4.0-SNAPSHOT
 
 node_types:
-  alien.nodes.MesosMaster:
+  org.alien4cloud.nodes.MesosMaster:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       A Mesos master agent.
@@ -56,8 +56,8 @@ node_types:
       master_url: { concat: ["zk://", get_operation_output: [SELF, Standard, configure, zk_endpoints], "/mesos"] }
       zk_endpoints: { get_operation_output: [SELF, Standard, configure, zk_endpoints] }
     capabilities:
-      master: alien.capabilities.MesosMaster
-      host: alien.capabilities.MesosMasterHost
+      master: org.alien4cloud.capabilities.MesosMaster
+      host: org.alien4cloud.capabilities.MesosMasterHost
     requirements:
       - host:
           capability: tosca.capabilities.Container
@@ -94,7 +94,7 @@ node_types:
         stop:
           implementation: scripts/master/stop.sh
 
-  alien.nodes.MesosSlave:
+  org.alien4cloud.nodes.MesosSlave:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       A Mesos slave agent.
@@ -160,7 +160,7 @@ node_types:
         stop:
           implementation: scripts/slave/stop.sh
     capabilities:
-      host: alien.capabilities.MesosSlaveHost
+      host: org.alien4cloud.capabilities.MesosSlaveHost
     requirements:
       - host:
           capability: tosca.capabilities.Container
@@ -175,19 +175,19 @@ node_types:
                     - architecture: { equal: x86_64 }
                     - distribution: { valid_values: [ debian, rhel, ubuntu, centos ] }
       - master:
-          capability: alien.capabilities.MesosMaster
-          relationship: alien.relationships.MesosSlaveConnectsToMaster
+          capability: org.alien4cloud.capabilities.MesosMaster
+          relationship: org.alien4cloud.relationships.MesosSlaveConnectsToMaster
           occurrences: [1, 1]
       - docker_cli:
           capability: org.alien4cloud.capabilities.DockerCLI
-          relationship: alien.relationships.MesosSlaveDependsOnDocker
+          relationship: org.alien4cloud.relationships.MesosSlaveDependsOnDocker
           occurrences: [0, 1]
       - dns_server:
-          capability: alien.capabilities.MesosDNS
-          relationship: alien.relationships.MesosSlaveConnectsToDNS
+          capability: org.alien4cloud.capabilities.MesosDNS
+          relationship: org.alien4cloud.relationships.MesosSlaveConnectsToDNS
           occurrences: [0, unbounded]
 
-  alien.nodes.Marathon:
+  org.alien4cloud.nodes.Marathon:
     derived_from: tosca.nodes.SoftwareComponent
     description: >
       Marathon scheduler.
@@ -203,12 +203,12 @@ node_types:
       external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8080/ui"] }
       api_url: { concat: ["http://", get_attribute: [HOST, public_ip_address], ":8080/v2"] }
     capabilities:
-      marathon: alien.capabilities.MarathonMaster
-      host: alien.capabilities.MarathonHost
+      marathon: org.alien4cloud.capabilities.MarathonMaster
+      host: org.alien4cloud.capabilities.MarathonHost
     requirements:
       - host:
-          capability: alien.capabilities.MesosMasterHost
-          relationship: alien.relationships.MarathonHostedOnMaster
+          capability: org.alien4cloud.capabilities.MesosMasterHost
+          relationship: org.alien4cloud.relationships.MarathonHostedOnMaster
           occurrences: [1, 1]
     interfaces:
       Standard:
@@ -226,7 +226,7 @@ node_types:
           implementation: scripts/marathon/start.sh
         stop: scripts/marathon/stop.sh
 
-  alien.nodes.MesosDNS:
+  org.alien4cloud.nodes.MesosDNS:
     derived_from: tosca.nodes.SoftwareComponent
     description: DNS service for Mesos clusters.
     properties:
@@ -239,15 +239,15 @@ node_types:
         required: true
         default: 512
     capabilities:
-      dns_server: alien.capabilities.MesosDNS
+      dns_server: org.alien4cloud.capabilities.MesosDNS
     requirements:
       - host:
-          capability: alien.capabilities.MesosSlaveHost
+          capability: org.alien4cloud.capabilities.MesosSlaveHost
           relationship: tosca.relationships.HostedOn
           occurrences: [1, 1]
       - marathon:
-          capability: alien.capabilities.MarathonMaster
-          relationship: alien.relationships.MesosDNSConnectsToMaster
+          capability: org.alien4cloud.capabilities.MarathonMaster
+          relationship: org.alien4cloud.relationships.MesosDNSConnectsToMaster
           occurrences: [1, 1]
     artifacts:
       - dns_config:
@@ -268,7 +268,7 @@ node_types:
           implementation: scripts/service-discovery/configure-mesosdns.sh
         start: scripts/service-discovery/start-mesosdns.sh
 
-  alien.nodes.MarathonLB:
+  org.alien4cloud.nodes.MarathonLB:
     derived_from: tosca.nodes.SoftwareComponent
     description: Marathon load-balancer for Mesos clusters.
     properties:
@@ -286,7 +286,7 @@ node_types:
         default: 512
     requirements:
       - host:
-          capability: alien.capabilities.MarathonHost
+          capability: org.alien4cloud.capabilities.MarathonHost
           relationship: tosca.relationships.HostedOn
           occurrences: [1, 1]
     artifacts:
@@ -303,7 +303,7 @@ node_types:
             MARATHON_API: { get_attribute: [HOST, api_url] }
           implementation: scripts/service-discovery/configure-marathonlb.sh
         start: scripts/service-discovery/start-marathonlb.sh
-  alien.nodes.RexrayClient:
+  org.alien4cloud.nodes.RexrayClient:
     derived_from: tosca.nodes.SoftwareComponent
     description: Docker volume driver plugin for external storage management.
     properties:
@@ -316,8 +316,8 @@ node_types:
           relationship: tosca.relationships.HostedOn
           occurrences: [1, 1]
       - libstorage_server:
-          capability: alien.capabilities.LibStorageServer
-          relationship: alien.relationships.RexrayConnectsToLibStorage
+          capability: org.alien4cloud.capabilities.LibStorageServer
+          relationship: org.alien4cloud.relationships.RexrayConnectsToLibStorage
     artifacts:
       - rexray_config:
           file: artifacts/rexray_config.yml
@@ -330,11 +330,11 @@ node_types:
             STORAGE_SERVICE: { get_property: [SELF, storage_service] }
           implementation: scripts/rexray/configure_client.sh
         start: scripts/rexray/start.sh
-  alien.nodes.RexrayServer:
+  org.alien4cloud.nodes.RexrayServer:
     derived_from: tosca.nodes.SoftwareComponent
     description: Serves as a centralized libStorage server for Rexray clients
     capabilities:
-      - libstorage_server: alien.capabilities.LibStorageServer
+      - libstorage_server: org.alien4cloud.capabilities.LibStorageServer
     requirements:
       - host:
           capability: tosca.capabilities.Container
@@ -350,19 +350,19 @@ node_types:
         start: scripts/rexray/start.sh
 
 capability_types:
-  alien.capabilities.MesosMasterHost:
+  org.alien4cloud.capabilities.MesosMasterHost:
     derived_from: tosca.capabilities.Container
-  alien.capabilities.MesosMaster:
+  org.alien4cloud.capabilities.MesosMaster:
     derived_from: tosca.capabilities.Root
-  alien.capabilities.MesosSlaveHost:
+  org.alien4cloud.capabilities.MesosSlaveHost:
     derived_from: tosca.capabilities.Container
-  alien.capabilities.MarathonMaster:
+  org.alien4cloud.capabilities.MarathonMaster:
     derived_from: tosca.capabilities.Root
-  alien.capabilities.MarathonHost:
+  org.alien4cloud.capabilities.MarathonHost:
     derived_from: tosca.capabilities.Container
-  alien.capabilities.MesosDNS:
+  org.alien4cloud.capabilities.MesosDNS:
     derived_from: tosca.capabilities.Root
-  alien.capabilities.LibStorageServer:
+  org.alien4cloud.capabilities.LibStorageServer:
     derived_from: tosca.capabilities.Endpoint
     properties:
       protocol:
@@ -375,54 +375,54 @@ capability_types:
         default: 7979
 
 relationship_types:
-  alien.relationships.MarathonHostedOnMaster:
+  org.alien4cloud.relationships.MarathonHostedOnMaster:
     derived_from: tosca.relationships.HostedOn
     description: Relationship used to bind the Marathon scheduler to a Mesos Master
-    valid_target_types: [ alien.nodes.MesosMaster ]
-  alien.relationships.AppHostedOnSlave:
+    valid_target_types: [ org.alien4cloud.nodes.MesosMaster ]
+  org.alien4cloud.relationships.AppHostedOnSlave:
     derived_from: tosca.relationships.HostedOn
-    valid_target_types: [ alien.nodes.MesosSlave ]
-  alien.relationships.MesosSlaveConnectsToMaster:
+    valid_target_types: [ org.alien4cloud.nodes.MesosSlave ]
+  org.alien4cloud.relationships.MesosSlaveConnectsToMaster:
     derived_from: tosca.relationships.ConnectsTo
     description: Relationship used to bind a slave to a master
-    valid_target_types: [ alien.nodes.MesosMaster ]
+    valid_target_types: [ org.alien4cloud.nodes.MesosMaster ]
     interfaces:
       Configure:
         post_configure_source:
           inputs:
             MESOS_MASTER: { get_attribute: [TARGET, master_url] }
           implementation: scripts/slave/configure_connectsToMaster.sh
-  alien.relationships.MesosDNSConnectsToMaster:
+  org.alien4cloud.relationships.MesosDNSConnectsToMaster:
     derived_from: tosca.relationships.ConnectsTo
-    valid_target_types: [ alien.nodes.Marathon ]
+    valid_target_types: [ org.alien4cloud.nodes.Marathon ]
     interfaces:
       Configure:
         post_configure_source:
           inputs:
             MARATHON_API: { get_attribute: [TARGET, api_url] }
           implementation: scripts/service-discovery/configure_mesosdnsConnectsToMaster.sh
-  alien.relationships.AppHostedOnMarathon:
+  org.alien4cloud.relationships.AppHostedOnMarathon:
     derived_from: tosca.relationships.HostedOn
-    valid_target_types: [ alien.nodes.Marathon ]
-  alien.relationships.MesosSlaveConnectsToDNS:
+    valid_target_types: [ org.alien4cloud.nodes.Marathon ]
+  org.alien4cloud.relationships.MesosSlaveConnectsToDNS:
     derived_from: tosca.relationships.ConnectsTo
-    valid_target_types: [ alien.nodes.MesosDNS ]
+    valid_target_types: [ org.alien4cloud.nodes.MesosDNS ]
     interfaces:
       Configure:
         add_target:
           inputs:
             DNS_IP: { get_attribute: [TARGET, ip_address] }
           implementation: scripts/slave/configure_connectsToDNS.sh
-  alien.relationships.MesosSlaveDependsOnDocker:
+  org.alien4cloud.relationships.MesosSlaveDependsOnDocker:
     derived_from: tosca.relationships.DependsOn
-    valid_target_types: [ alien.nodes.DockerEngine ]
+    valid_target_types: [ org.alien4cloud.nodes.DockerEngine ]
     description: Relationship used to bind a Mesos slave to a Docker engine
     interfaces:
         Configure:
           post_configure_source: scripts/slave/configure_dependsOnDocker.sh
-  alien.relationships.RexrayConnectsToLibStorage:
+  org.alien4cloud.relationships.RexrayConnectsToLibStorage:
     derived_from: tosca.relationships.ConnectsTo
-    valid_target_types: [ alien.nodes.RexrayServer ]
+    valid_target_types: [ org.alien4cloud.nodes.RexrayServer ]
     description: Connects Rexray clients to the Rexray server
     interfaces:
       Configure:
