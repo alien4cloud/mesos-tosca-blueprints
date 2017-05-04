@@ -1,12 +1,15 @@
-tosca_definitions_version: alien_dsl_1_3_0
-description: TOSCA Apache Mesos & Mesosphere Marathon profile
-template_name: mesos-types
-template_version: 1.2.0
-template_author: FastConnect
+tosca_definitions_version: alien_dsl_1_4_0
+
+metadata:
+  template_name: mesos-types
+  template_version: 1.4.0-SNAPSHOT
+  template_author: alien4cloud
+
+description: "TOSCA Apache Mesos & Mesosphere Marathon profile."
 
 imports:
-  - "tosca-normative-types:1.0.0-ALIEN12"
-  - "docker-engine:1.0.0"
+  - tosca-normative-types:1.0.0-ALIEN14
+  - docker-engine-type:1.4.0-SNAPSHOT
 
 node_types:
   alien.nodes.MesosMaster:
@@ -176,7 +179,7 @@ node_types:
           relationship: alien.relationships.MesosSlaveConnectsToMaster
           occurrences: [1, 1]
       - docker_cli:
-          capability: alien.capabilities.DockerCLI
+          capability: org.alien4cloud.capabilities.DockerCLI
           relationship: alien.relationships.MesosSlaveDependsOnDocker
           occurrences: [0, 1]
       - dns_server:
@@ -309,7 +312,7 @@ node_types:
         required: true
     requirements:
       - host:
-          capability: alien.capabilities.DockerHost
+          capability: org.alien4cloud.capabilities.DockerHost
           relationship: tosca.relationships.HostedOn
           occurrences: [1, 1]
       - libstorage_server:

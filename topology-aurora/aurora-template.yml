@@ -1,13 +1,16 @@
-tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
-description: Alien4Cloud TOSCA template of an Aurora cluster. Uses Aurora v.0.12.
-template_name: Aurora
-template_version: 1.0.0
-template_author: Fastconnect
+tosca_definitions_version: alien_dsl_1_4_0
+
+metadata:
+  template_name: aurora-topology
+  template_version: 1.4.0-SNAPSHOT
+  template_author: alien4cloud
+
+description: "Alien4Cloud TOSCA template of an Aurora cluster. Uses Aurora v.0.12."
 
 imports:
-  - tosca-normative-types:1.0.0-ALIEN12
-  - mesos-types:1.2.0
-  - aurora-types:1.0.0
+  - tosca-normative-types:1.0.0-ALIEN14
+  - mesos-types:1.4.0-SNAPSHOT
+  - aurora-types:1.4.0-SNAPSHOT
 
 topology_template:
   node_templates:

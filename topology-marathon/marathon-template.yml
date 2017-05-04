@@ -1,190 +1,183 @@
-tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
-description: Alien4Cloud TOSCA template of a Marathon cluster.
-template_name: Marathon
-template_version: 1.0.0
-template_author: Fastconnect
+tosca_definitions_version: alien_dsl_1_4_0
+
+metadata:
+  template_name: marathon-topology
+  template_version: 1.4.0-SNAPSHOT
+  template_author: alien4cloud
+
+description: "Alien4Cloud TOSCA template of a Marathon cluster."
 
 imports:
-  - tosca-normative-types:1.0.0-ALIEN12
-  - docker-engine:1.0.0
-  - mesos-types:1.2.0
+  - tosca-normative-types:1.0.0-ALIEN14
+  - docker-engine-type:1.4.0-SNAPSHOT
+  - mesos-types:1.4.0-SNAPSHOT
 
 topology_template:
   node_templates:
-    MesosSlave_2:
-      type: alien.nodes.MesosSlave
-      properties:
-        log_dir: /var/log/mesos
-        port: 5051
-        work_dir: /var/lib/mesos
-        isolation: posix/cpu,posix/mem
-      requirements:
-        - host:
-            node: SlaveCompute_2
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
-        - master:
-            node: MesosMaster
-            capability: alien.capabilities.MesosMaster
-            relationship: alien.relationships.MesosSlaveConnectsToMaster
-        - docker_cli:
-            node: DockerEngine_2
-            capability: alien.capabilities.DockerCLI
-            relationship: alien.relationships.MesosSlaveDependsOnDocker
-    MesosMaster:
-      type: alien.nodes.MesosMaster
-      properties:
-        log_dir: /var/log/mesos
-        cluster_name: Mesos with A4C
-        port: 5050
-        work_dir: /var/lib/mesos
-      requirements:
-        - host:
-            node: MasterCompute
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
-    MesosDNS:
-      type: alien.nodes.MesosDNS
-      properties:
-        cpu_alloc: 1.0
-        mem_alloc: 512
-      requirements:
-        - marathon:
-            node: Marathon
-            capability: alien.capabilities.MarathonMaster
-            relationship: alien.relationships.MesosDNSConnectsToMaster
-        - host:
-            node: MesosSlave_2
-            capability: alien.capabilities.MesosSlaveHost
-            relationship: tosca.relationships.HostedOn
-    DockerEngine:
-      type: alien.nodes.DockerEngine
-      requirements:
-        - host:
-            node: SlaveCompute
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
-    MasterCompute:
-      type: tosca.nodes.Compute
-      capabilities:
-        scalable:
-          properties:
-            min_instances: 1
-            max_instances: 5
-            default_instances: 3
-        endpoint:
-          properties:
-            protocol: tcp
-            initiator: source
-            network_name: PRIVATE
-            secure: true
-        os:
-          properties:
-            type: linux
-            distribution: ubuntu
-            version: 14.04
-            architecture: x86_64
-    SlaveCompute_2:
-      type: tosca.nodes.Compute
-      capabilities:
-        scalable:
-          properties:
-            min_instances: 1
-            max_instances: 3
-            default_instances: 2
-        endpoint:
-          properties:
-            protocol: tcp
-            initiator: source
-            network_name: PRIVATE
-            secure: true
-        os:
-          properties:
-            type: linux
-            distribution: ubuntu
-            version: 14.04
-            architecture: x86_64
-        host:
-          properties:
-            num_cpus: 2
-            mem_size: 4096 MB
-    DockerEngine_2:
-      type: alien.nodes.DockerEngine
-      requirements:
-        - host:
-            node: SlaveCompute_2
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
-    SlaveCompute:
-      type: tosca.nodes.Compute
-      capabilities:
-        scalable:
-          properties:
-            min_instances: 1
-            max_instances: 100
-            default_instances: 5
-        endpoint:
-          properties:
-            protocol: tcp
-            initiator: source
-            network_name: PRIVATE
-            secure: true
-        os:
-          properties:
-            type: linux
-            distribution: ubuntu
-            version: 14.04
-            architecture: x86_64
-        host:
-          properties:
-            num_cpus: 2
-            mem_size: 4096 MB
-    Marathon:
-      type: alien.nodes.Marathon
-      requirements:
-        - host:
-            node: MesosMaster
-            capability: alien.capabilities.MesosMasterHost
-            relationship: tosca.relationships.HostedOn
-    MesosSlave:
-      type: alien.nodes.MesosSlave
-      properties:
-        log_dir: /var/log/mesos
-        port: 5051
-        work_dir: /var/lib/mesos
-        isolation: posix/cpu,posix/mem
-      requirements:
-        - master:
-            node: MesosMaster
-            capability: alien.capabilities.MesosMaster
-            relationship: alien.relationships.MesosSlaveConnectsToMaster
-        - docker_cli:
-            node: DockerEngine
-            capability: alien.capabilities.DockerCLI
-            relationship: alien.relationships.MesosSlaveDependsOnDocker
-        - dns_server:
-            node: MesosDNS
-            capability: alien.capabilities.MesosDNS
-            relationship: alien.relationships.MesosSlaveConnectsToDNS
-        - host:
-            node: SlaveCompute
-            capability: tosca.capabilities.Container
-            relationship: tosca.relationships.HostedOn
-    MarathonLB:
-      type: alien.nodes.MarathonLB
-      properties:
-        instances: 1
-        cpu_alloc: 1.0
-        mem_alloc: 512
-      requirements:
-        - host:
-            node: Marathon
-            capability: alien.capabilities.MarathonHost
-            relationship: tosca.relationships.HostedOn
+   MasterCompute:
+     type: tosca.nodes.Compute
+     capabilities:
+       scalable:
+         properties:
+           min_instances: 1
+           max_instances: 5
+           default_instances: 3
+       endpoint:
+         properties:
+           protocol: tcp
+           initiator: source
+           network_name: PRIVATE
+           secure: true
+       os:
+         properties:
+           type: linux
+           distribution: ubuntu
+           version: 14.04
+           architecture: x86_64
+   MesosMaster:
+     type: alien.nodes.MesosMaster
+     properties:
+       log_dir: /var/log/mesos
+       cluster_name: Mesos with A4C
+       port: 5050
+       work_dir: /var/lib/mesos
+     requirements:
+       - host:
+           node: MasterCompute
+           capability: tosca.capabilities.Container
+           relationship: tosca.relationships.HostedOn
+   Marathon:
+     type: alien.nodes.Marathon
+     requirements:
+       - host:
+           node: MesosMaster
+           capability: alien.capabilities.MesosMasterHost
+           relationship: tosca.relationships.HostedOn
+   SlaveCompute:
+     type: tosca.nodes.Compute
+     capabilities:
+       scalable:
+         properties:
+           min_instances: 1
+           max_instances: 100
+           default_instances: 5
+       endpoint:
+         properties:
+           protocol: tcp
+           initiator: source
+           network_name: PRIVATE
+           secure: true
+       os:
+         properties:
+           type: linux
+           distribution: ubuntu
+           version: 14.04
+           architecture: x86_64
+   MesosSlave_2:
+     type: alien.nodes.MesosSlave
+     properties:
+       log_dir: /var/log/mesos
+       port: 5051
+       work_dir: /var/lib/mesos
+       isolation: 'posix/cpu,posix/mem'
+     requirements:
+       - host:
+           node: SlaveCompute_2
+           capability: tosca.capabilities.Container
+           relationship: tosca.relationships.HostedOn
+       - master:
+           node: MesosMaster
+           capability: alien.capabilities.MesosMaster
+           relationship: alien.relationships.MesosSlaveConnectsToMaster
+       - docker_cli:
+           node: DockerEngine_2
+           capability: org.alien4cloud.capabilities.DockerCLI
+           relationship: alien.relationships.MesosSlaveDependsOnDocker
+   MesosDNS:
+     type: alien.nodes.MesosDNS
+     properties:
+       cpu_alloc: 1.0
+       mem_alloc: 512
+     requirements:
+       - marathon:
+           node: Marathon
+           capability: alien.capabilities.MarathonMaster
+           relationship: alien.relationships.MesosDNSConnectsToMaster
+       - host:
+           node: MesosSlave_2
+           capability: alien.capabilities.MesosSlaveHost
+           relationship: tosca.relationships.HostedOn
+   DockerEngine:
+     type: org.alien4cloud.nodes.DockerEngine
+     requirements:
+       - host:
+           node: SlaveCompute
+           capability: tosca.capabilities.Container
+           relationship: tosca.relationships.HostedOn
+   SlaveCompute_2:
+     type: tosca.nodes.Compute
+     capabilities:
+       scalable:
+         properties:
+           min_instances: 1
+           max_instances: 3
+           default_instances: 2
+       endpoint:
+         properties:
+           protocol: tcp
+           initiator: source
+           network_name: PRIVATE
+           secure: true
+       os:
+         properties:
+           type: linux
+           distribution: ubuntu
+           version: 14.04
+           architecture: x86_64
+   DockerEngine_2:
+     type: org.alien4cloud.nodes.DockerEngine
+     requirements:
+       - host:
+           node: SlaveCompute_2
+           capability: tosca.capabilities.Container
+           relationship: tosca.relationships.HostedOn
+   MesosSlave:
+     type: alien.nodes.MesosSlave
+     properties:
+       log_dir: /var/log/mesos
+       port: 5051
+       work_dir: /var/lib/mesos
+       isolation: 'posix/cpu,posix/mem'
+     requirements:
+       - master:
+           node: MesosMaster
+           capability: alien.capabilities.MesosMaster
+           relationship: alien.relationships.MesosSlaveConnectsToMaster
+       - docker_cli:
+           node: DockerEngine
+           capability: org.alien4cloud.capabilities.DockerCLI
+           relationship: alien.relationships.MesosSlaveDependsOnDocker
+       - dns_server:
+           node: MesosDNS
+           capability: alien.capabilities.MesosDNS
+           relationship: alien.relationships.MesosSlaveConnectsToDNS
+       - host:
+           node: SlaveCompute
+           capability: tosca.capabilities.Container
+           relationship: tosca.relationships.HostedOn
+   MarathonLB:
+     type: alien.nodes.MarathonLB
+     properties:
+       instances: 1
+       cpu_alloc: 1.0
+       mem_alloc: 512
+     requirements:
+       - host:
+           node: Marathon
+           capability: alien.capabilities.MarathonHost
+           relationship: tosca.relationships.HostedOn
   outputs:
-    Mesos_masters:
-      description: The masters' URLs.
-      value: { get_attribute: [MesosMaster, external_url] }
-    Marathon:
-      description: Marathon's URL.
-      value: { get_attribute: [Marathon, external_url]}
+    MesosMaster_external_url:
+      value: { get_attribute: [ MesosMaster, external_url ] }
+    Marathon_external_url:
+      value: { get_attribute: [ Marathon, external_url ] }

@@ -1,12 +1,15 @@
-tosca_definitions_version: tosca_simple_yaml_1_0_0_wd03
-description: Template for a scalable Mesos cluster in HA mode
-template_name: Mesos
-template_version: 1.0.0
-template_author: Fastconnect
+tosca_definitions_version: alien_dsl_1_4_0
+
+metadata:
+  template_name: mesos-ha-topology
+  template_version: 1.4.0-SNAPSHOT
+  template_author: alien4cloud
+
+description: "Template for a scalable Mesos cluster in HA mode."
 
 imports:
-  - tosca-normative-types:1.0.0-ALIEN12
-  - mesos-types:1.2.0
+  - tosca-normative-types:1.0.0-ALIEN14
+  - mesos-types:1.4.0-SNAPSHOT
 
 topology_template:
   node_templates:

@@ -1,12 +1,15 @@
-tosca_definitions_version: alien_dsl_1_2_0
+tosca_definitions_version: alien_dsl_1_4_0
+
+metadata:
+  template_name: aurora-types
+  template_version: 1.4.0-SNAPSHOT
+  template_author: FastConnect
+
 description: TOSCA Apache Aurora profile
-template_name: aurora-types
-template_version: 1.0.0
-template_author: FastConnect
 
 imports:
-  - "tosca-normative-types:1.0.0-ALIEN12"
-  - "mesos-types:1.2.0"
+  - tosca-normative-types:1.0.0-ALIEN14
+  - mesos-types:1.4.0-SNAPSHOT
 
 node_types:
   alien.nodes.AuroraScheduler:
@@ -23,12 +26,13 @@ node_types:
     attributes:
       external_url: { concat: [ "http://", get_attribute: [HOST, public_ip_address], ":8081/scheduler"] }
     requirements:
-      - host: alien.capabilities.MesosMaster
-        type: alien.relationships.AuroraSchedulerHostedOnMaster
-        occurrences: [1, 1]
-        node_filter:
-          properties:
-            - component_version: { equal: 0.25.0-0.2.70 }
+      - host: 
+          capability: alien.capabilities.MesosMaster
+          relationship: alien.relationships.AuroraSchedulerHostedOnMaster
+          occurrences: [1, 1]
+          node_filter:
+            properties:
+              - component_version: { equal: 0.25.0-0.2.70 }
     interfaces:
       Standard:
         create:
@@ -58,12 +62,13 @@ node_types:
     tags:
       icon: images/aurora_icon.png
     requirements:
-      - host: alien.capabilities.MesosSlaveHost
-        type: alien.relationships.AuroraExecutorHostedOnSlave
-        occurrences: [1, 1]
-        node_filter:
-          properties:
-            - component_version: { equal: 0.25.0-0.2.70 }
+      - host: 
+          capability: alien.capabilities.MesosSlaveHost
+          relationship: alien.relationships.AuroraExecutorHostedOnSlave
+          occurrences: [1, 1]
+          node_filter:
+            properties:
+              - component_version: { equal: 0.25.0-0.2.70 }
     interfaces:
       Standard:
         create:

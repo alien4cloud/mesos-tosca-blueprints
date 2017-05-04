@@ -1,3 +1,4 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea/
 mesos-types/artifacts/credentials/
+*.zip

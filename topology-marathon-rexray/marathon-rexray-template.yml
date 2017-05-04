@@ -1,13 +1,16 @@
-tosca_definitions_version: alien_dsl_1_3_0
-description: Alien4Cloud generated service template
-template_name: MarathonRexRay
-template_version: 1.0.0
-template_author: Fastconnect
+tosca_definitions_version: alien_dsl_1_4_0
+
+metadata:
+  template_name: marathon-rex-ray-topology
+  template_version: 1.4.0-SNAPSHOT
+  template_author: alien4cloud
+
+description: "Alien4Cloud generated service template."
 
 imports:
-  - tosca-normative-types:1.0.0-ALIEN12
-  - docker-engine:1.0.0
-  - mesos-types:1.2.0
+  - tosca-normative-types:1.0.0-ALIEN14
+  - docker-engine-type:1.4.0-SNAPSHOT
+  - mesos-types:1.4.0-SNAPSHOT
 
 topology_template:
   input_artifacts:
@@ -31,7 +34,7 @@ topology_template:
             capability: tosca.capabilities.Container
             relationship: tosca.relationships.HostedOn
     DockerEngine_2:
-      type: alien.nodes.DockerEngine
+      type: org.alien4cloud.nodes.DockerEngine
       requirements:
         - host:
             node: SlaveCompute_2
@@ -103,7 +106,7 @@ topology_template:
             relationship: alien.relationships.MesosSlaveConnectsToMaster
         - docker_cli:
             node: DockerEngine
-            capability: alien.capabilities.DockerCLI
+            capability: org.alien4cloud.capabilities.DockerCLI
             relationship: alien.relationships.MesosSlaveDependsOnDocker
         - host:
             node: SlaveCompute
@@ -127,7 +130,7 @@ topology_template:
       requirements:
         - host:
             node: DockerEngine
-            capability: alien.capabilities.DockerHost
+            capability: org.alien4cloud.capabilities.DockerHost
             relationship: tosca.relationships.HostedOn
         - libstorage_server:
             node: RexrayServer
@@ -151,7 +154,7 @@ topology_template:
             relationship: alien.relationships.MesosSlaveConnectsToMaster
         - docker_cli:
             node: DockerEngine_2
-            capability: alien.capabilities.DockerCLI
+            capability: org.alien4cloud.capabilities.DockerCLI
             relationship: alien.relationships.MesosSlaveDependsOnDocker
     MesosDNS:
       type: alien.nodes.MesosDNS
@@ -168,7 +171,7 @@ topology_template:
             capability: alien.capabilities.MarathonMaster
             relationship: alien.relationships.MesosDNSConnectsToMaster
     DockerEngine:
-      type: alien.nodes.DockerEngine
+      type: org.alien4cloud.nodes.DockerEngine
       requirements:
         - host:
             node: SlaveCompute
@@ -201,7 +204,7 @@ topology_template:
       requirements:
         - host:
             node: DockerEngine_2
-            capability: alien.capabilities.DockerHost
+            capability: org.alien4cloud.capabilities.DockerHost
             relationship: tosca.relationships.HostedOn
         - libstorage_server:
             node: RexrayServer
