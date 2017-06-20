@@ -72,7 +72,7 @@ topology_template:
   outputs:
     masters_ip:
       description: The masters' IPs.
-      value: { get_attribute: [MesosMaster, external_url] }
+      value: { get_attribute: [Mesos_Master, external_url] }
     zk_url:
       description: The Zookeeper endpoint URL.
-      value: { get_attribute: [MesosMaster, master_url] }
+      value: { get_attribute: [Mesos_Master, master_url] }
