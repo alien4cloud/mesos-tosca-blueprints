@@ -334,7 +334,7 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     description: Serves as a centralized libStorage server for Rexray clients
     capabilities:
-      - libstorage_server: org.alien4cloud.capabilities.LibStorageServer
+      libstorage_server: org.alien4cloud.capabilities.LibStorageServer
     requirements:
       - host:
           capability: tosca.capabilities.Container
